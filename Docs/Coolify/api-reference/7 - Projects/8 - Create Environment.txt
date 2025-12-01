@@ -1,0 +1,79 @@
+Create environment in project.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+uuid
+*
+Project UUID
+
+Type
+string
+Required
+Request Body
+Schema
+JSON
+
+{
+"name": 
+"string"
+}
+Responses
+
+201
+Environment created.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"uuid": 
+"env123"
+}
+
+POST
+/projects/{uuid}/environments
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+uuid*
+Body
+
+
+{
+name
+:
+string 
+}
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.post(
+    "https://app.coolify.io/api/v1/projects/%7Buuid%7D/environments",
+    headers={
+      "Authorization": "Bearer Token",
+      "Content-Type": "application/json"
+    },
+    json={
+      "name": "string"
+    }
+)

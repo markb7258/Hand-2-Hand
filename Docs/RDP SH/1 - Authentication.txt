@@ -1,0 +1,7 @@
+Bearer Token
+RDP.sh’s API uses API key authentication with your API Secret Key. You will have to send your API Secret Key via the Authorization header.
+
+Copy
+Authorization: YOUR_API_KEY
+Your API key can be accessed and re-generated in the general tab.
+All API requests must be made over HTTPS.

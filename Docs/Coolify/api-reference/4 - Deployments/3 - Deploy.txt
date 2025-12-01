@@ -1,0 +1,85 @@
+Deploy by tag or uuid. Post request also accepted with uuid and tag json body.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Query Parameters
+tag
+Tag name(s). Comma separated list is also accepted.
+
+Type
+string
+uuid
+Resource UUID(s). Comma separated list is also accepted.
+
+Type
+string
+force
+Force rebuild (without cache)
+
+Type
+boolean
+pr
+Pull Request Id for deploying specific PR builds. Cannot be used with tag parameter.
+
+Type
+integer
+Responses
+200
+400
+401
+Get deployment(s) UUID's
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"deployments": 
+[
+{
+"message": 
+"string",
+"resource_uuid": 
+"string",
+"deployment_uuid": 
+"string"
+}
+]
+}
+
+GET
+/deploy
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+tag
+uuid
+force
+
+pr
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.get("https://app.coolify.io/api/v1/deploy",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

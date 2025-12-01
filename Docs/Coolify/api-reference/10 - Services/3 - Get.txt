@@ -1,0 +1,95 @@
+Get service by UUID.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+uuid
+*
+Service UUID
+
+Type
+string
+Required
+Responses
+200
+400
+401
+404
+Get a service by UUID.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"id": 
+0,
+"uuid": 
+"string",
+"name": 
+"string",
+"environment_id": 
+0,
+"server_id": 
+0,
+"description": 
+"string",
+"docker_compose_raw": 
+"string",
+"docker_compose": 
+"string",
+"destination_type": 
+"string",
+"destination_id": 
+0,
+"connect_to_docker_network": 
+true,
+"is_container_label_escape_enabled": 
+true,
+"is_container_label_readonly_enabled": 
+true,
+"config_hash": 
+"string",
+"service_type": 
+"string",
+"created_at": 
+"string",
+"updated_at": 
+"string",
+"deleted_at": 
+"string"
+}
+
+GET
+/services/{uuid}
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+uuid*
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.get(
+    "https://app.coolify.io/api/v1/services/%7Buuid%7D",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

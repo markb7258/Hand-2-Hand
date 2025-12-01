@@ -1,0 +1,81 @@
+Get key by UUID.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+uuid
+*
+Private Key UUID
+
+Type
+string
+Required
+Responses
+200
+400
+401
+404
+Get all private keys.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"id": 
+0,
+"uuid": 
+"string",
+"name": 
+"string",
+"description": 
+"string",
+"private_key": 
+"string",
+"public_key": 
+"string",
+"fingerprint": 
+"string",
+"is_git_related": 
+true,
+"team_id": 
+0,
+"created_at": 
+"string",
+"updated_at": 
+"string"
+}
+
+GET
+/security/keys/{uuid}
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+uuid*
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.get(
+    "https://app.coolify.io/api/v1/security/keys/%7Buuid%7D",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

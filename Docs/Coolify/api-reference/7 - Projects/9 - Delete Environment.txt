@@ -1,0 +1,70 @@
+Delete environment by name or UUID. Environment must be empty.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+uuid
+*
+Project UUID
+
+Type
+string
+Required
+environment_name_or_uuid
+*
+Environment name or UUID
+
+Type
+string
+Required
+Responses
+200
+400
+401
+404
+422
+Environment deleted.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"message": 
+"Environment deleted."
+}
+
+DELETE
+/projects/{uuid}/environments/{environment_name_or_uuid}
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+uuid*
+environment_name_or_uuid*
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.delete(
+    "https://app.coolify.io/api/v1/projects/%7Buuid%7D/environments/%7Benvironment_name_or_uuid%7D",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

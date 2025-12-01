@@ -1,0 +1,64 @@
+Fetch repositories from GitHub for a given GitHub app.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+github_app_id
+*
+GitHub App ID
+
+Type
+integer
+Required
+Responses
+200
+400
+401
+404
+Repositories loaded successfully.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"repositories": 
+[
+{
+}
+]
+}
+
+GET
+/github-apps/{github_app_id}/repositories
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+github_app_id*
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.get(
+    "https://app.coolify.io/api/v1/github-apps/%7Bgithub_app_id%7D/repositories",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

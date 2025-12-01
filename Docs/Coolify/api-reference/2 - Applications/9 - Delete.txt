@@ -1,0 +1,100 @@
+Delete application by UUID.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+uuid
+*
+UUID of the application.
+
+Type
+string
+Required
+format
+uuid
+Query Parameters
+delete_configurations
+Delete configurations.
+
+Type
+boolean
+default
+true
+delete_volumes
+Delete volumes.
+
+Type
+boolean
+default
+true
+docker_cleanup
+Run docker cleanup.
+
+Type
+boolean
+default
+true
+delete_connected_networks
+Delete connected networks.
+
+Type
+boolean
+default
+true
+Responses
+200
+400
+401
+404
+Application deleted.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"message": 
+"Application deleted."
+}
+
+DELETE
+/applications/{uuid}
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+uuid*
+delete_configurations
+
+delete_volumes
+
+docker_cleanup
+
+delete_connected_networks
+
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.delete(
+    "https://app.coolify.io/api/v1/applications/%7Buuid%7D",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

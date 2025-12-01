@@ -1,0 +1,80 @@
+Create a new private key.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Request Body
+Schema
+JSON
+
+{
+"name": 
+"string",
+"description": 
+"string",
+"private_key": 
+"string"
+}
+Responses
+201
+400
+401
+422
+The created private key's UUID.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"uuid": 
+"string"
+}
+
+POST
+/security/keys
+Authorization
+bearerAuth
+Token
+Body
+
+
+{
+name
+:
+string 
+description
+:
+string 
+private_key
+:
+string 
+}
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.post(
+    "https://app.coolify.io/api/v1/security/keys",
+    headers={
+      "Authorization": "Bearer Token",
+      "Content-Type": "application/json"
+    },
+    json={
+      "name": "string",
+      "description": "string",
+      "private_key": "string"
+    }
+)

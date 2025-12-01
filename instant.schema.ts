@@ -1,0 +1,40 @@
+import { i } from '@instantdb/core';
+
+// Define the schema for InstantDB
+const _schema = i.schema({
+  entities: {
+    // User profiles with admin status and authentication
+    profiles: i.entity({
+      email: i.string(),
+      passwordHash: i.string(),
+      isAdmin: i.boolean(),
+      isVerified: i.boolean(),
+      createdAt: i.number(),
+    }),
+    // Country data (population and groups)
+    countries: i.entity({
+      name: i.string(),
+      slug: i.string(),
+      population: i.string(),
+      groups: i.number(),
+      photoUrl: i.string().optional(),
+    }),
+    // User notes for each country
+    notes: i.entity({
+      userId: i.string(),
+      countrySlug: i.string(),
+      content: i.string(),
+      updatedAt: i.number(),
+    }),
+    // Gallery images for each country
+    galleryImages: i.entity({
+      countrySlug: i.string(),
+      imageUrl: i.string(),
+      order: i.number(),
+    }),
+  },
+  links: {},
+  rooms: {},
+});
+
+export default _schema;

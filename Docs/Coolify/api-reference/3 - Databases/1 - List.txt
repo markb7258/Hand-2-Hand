@@ -1,0 +1,43 @@
+List all databases.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Responses
+200
+400
+401
+Get all databases
+Content-Type
+application/json
+Schema
+JSON
+
+"string"
+
+GET
+/databases
+Authorization
+bearerAuth
+Token
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.get("https://app.coolify.io/api/v1/databases",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

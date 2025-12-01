@@ -1,0 +1,71 @@
+List projects.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Responses
+200
+400
+401
+Get all projects.
+Content-Type
+application/json
+Schema
+JSON
+
+[
+{
+"id": 
+0,
+"uuid": 
+"string",
+"name": 
+"string",
+"description": 
+"string",
+"environments": 
+[
+{
+"id": 
+0,
+"name": 
+"string",
+"project_id": 
+0,
+"created_at": 
+"string",
+"updated_at": 
+"string",
+"description": 
+"string"
+}
+]
+}
+]
+
+GET
+/projects
+Authorization
+bearerAuth
+Token
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.get("https://app.coolify.io/api/v1/projects",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

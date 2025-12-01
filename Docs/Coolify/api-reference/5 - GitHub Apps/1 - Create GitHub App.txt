@@ -1,0 +1,166 @@
+Create a new GitHub app.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Request Body
+Schema
+JSON
+
+{
+"name": 
+"string",
+"organization": 
+"string",
+"api_url": 
+"string",
+"html_url": 
+"string",
+"custom_user": 
+"string",
+"custom_port": 
+0,
+"app_id": 
+0,
+"installation_id": 
+0,
+"client_id": 
+"string",
+"client_secret": 
+"string",
+"webhook_secret": 
+"string",
+"private_key_uuid": 
+"string",
+"is_system_wide": 
+true
+}
+Responses
+201
+400
+401
+422
+GitHub app created successfully.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"id": 
+0,
+"uuid": 
+"string",
+"name": 
+"string",
+"organization": 
+"string",
+"api_url": 
+"string",
+"html_url": 
+"string",
+"custom_user": 
+"string",
+"custom_port": 
+0,
+"app_id": 
+0,
+"installation_id": 
+0,
+"client_id": 
+"string",
+"private_key_id": 
+0,
+"is_system_wide": 
+true,
+"team_id": 
+0
+}
+
+POST
+/github-apps
+Authorization
+bearerAuth
+Token
+Body
+
+
+{
+name
+:
+string 
+organization
+:
+string 
+api_url
+:
+string 
+html_url
+:
+string 
+custom_user
+:
+string 
+custom_port
+:
+0 
+app_id
+:
+0 
+installation_id
+:
+0 
+client_id
+:
+string 
+client_secret
+:
+string 
+webhook_secret
+:
+string 
+private_key_uuid
+:
+string 
+is_system_wide
+:
+true 
+}
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.post(
+    "https://app.coolify.io/api/v1/github-apps",
+    headers={
+      "Authorization": "Bearer Token",
+      "Content-Type": "application/json"
+    },
+    json={
+      "name": "string",
+      "organization": "string",
+      "api_url": "string",
+      "html_url": "string",
+      "custom_user": "string",
+      "custom_port": 0,
+      "app_id": 0,
+      "installation_id": 0,
+      "client_id": "string",
+      "client_secret": "string",
+      "webhook_secret": "string",
+      "private_key_uuid": "string",
+      "is_system_wide": true
+    }
+)

@@ -1,0 +1,125 @@
+Create a one-click / custom service
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Request Body
+Schema
+JSON
+
+{
+"type": 
+"string",
+"name": 
+"string",
+"description": 
+"string",
+"project_uuid": 
+"string",
+"environment_name": 
+"string",
+"environment_uuid": 
+"string",
+"server_uuid": 
+"string",
+"destination_uuid": 
+"string",
+"instant_deploy": 
+false,
+"docker_compose_raw": 
+"string"
+}
+Responses
+201
+400
+401
+422
+Service created successfully.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"uuid": 
+"string",
+"domains": 
+[
+"string"
+]
+}
+
+POST
+/services
+Authorization
+bearerAuth
+Token
+Body
+
+
+{
+type
+:
+string 
+name
+:
+string 
+description
+:
+string 
+project_uuid
+:
+string 
+environment_name
+:
+string 
+environment_uuid
+:
+string 
+server_uuid
+:
+string 
+destination_uuid
+:
+string 
+instant_deploy
+:
+false 
+docker_compose_raw
+:
+string 
+}
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.post("https://app.coolify.io/api/v1/services",
+    headers={
+      "Authorization": "Bearer Token",
+      "Content-Type": "application/json"
+    },
+    json={
+      "type": "string",
+      "name": "string",
+      "description": "string",
+      "project_uuid": "string",
+      "environment_name": "string",
+      "environment_uuid": "string",
+      "server_uuid": "string",
+      "destination_uuid": "string",
+      "instant_deploy": false,
+      "docker_compose_raw": "string"
+    }
+)

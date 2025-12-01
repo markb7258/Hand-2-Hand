@@ -1,0 +1,52 @@
+Retrieve a list of available regions.
+
+GET
+/
+regions
+
+Try it
+Authorizations
+​
+Authorization
+stringheaderrequired
+Response
+200 - application/json
+The request was successful, and the server has returned the requested resource in the response body.
+
+​
+id
+integerrequired
+Examples:
+12
+​
+region
+string
+Examples:
+"nl""us"
+​
+location
+string
+Examples:
+"Amsterdam""Phoenix"
+
+
+
+import requests
+
+url = "https://rdp.sh/api/v1/regions"
+
+headers = {"Authorization": "<api-key>"}
+
+response = requests.get(url, headers=headers)
+
+print(response.json())
+
+
+
+[
+  {
+    "id": 1,
+    "region": "nl",
+    "location": "Amsterdam"
+  }
+]

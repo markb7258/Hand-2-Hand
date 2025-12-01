@@ -1,0 +1,46 @@
+Retrieve a list of available distros.
+
+GET
+/
+distros
+
+Try it
+Authorizations
+​
+Authorization
+stringheaderrequired
+Response
+200 - application/json
+The request was successful, and the server has returned the requested resource in the response body.
+
+​
+id
+integer
+Examples:
+1
+​
+description
+string
+Examples:
+"Debian 12"
+
+
+
+import requests
+
+url = "https://rdp.sh/api/v1/distros"
+
+headers = {"Authorization": "<api-key>"}
+
+response = requests.get(url, headers=headers)
+
+print(response.json())
+
+
+
+[
+  {
+    "id": 1,
+    "description": "Debian 12"
+  }
+]

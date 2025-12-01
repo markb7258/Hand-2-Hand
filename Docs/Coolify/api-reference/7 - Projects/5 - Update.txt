@@ -1,0 +1,94 @@
+Update Project.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+uuid
+*
+UUID of the project.
+
+Type
+string
+Required
+format
+uuid
+Request Body
+Schema
+JSON
+
+{
+"name": 
+"string",
+"description": 
+"string"
+}
+Responses
+201
+400
+401
+404
+422
+Project updated.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"uuid": 
+"og888os",
+"name": 
+"Project Name",
+"description": 
+"Project Description"
+}
+
+PATCH
+/projects/{uuid}
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+uuid*
+Body
+
+
+{
+name
+:
+string 
+description
+:
+string 
+}
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.patch(
+    "https://app.coolify.io/api/v1/projects/%7Buuid%7D",
+    headers={
+      "Authorization": "Bearer Token",
+      "Content-Type": "application/json"
+    },
+    json={
+      "name": "string",
+      "description": "string"
+    }
+)

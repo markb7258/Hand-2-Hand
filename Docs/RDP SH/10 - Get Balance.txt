@@ -1,0 +1,42 @@
+Retrieve your account’s balance. Balance is returned in decimal value.
+
+GET
+/
+billing
+/
+balance
+
+Try it
+Authorizations
+​
+Authorization
+stringheaderrequired
+Response
+200 - application/json
+The request was successful, and the server has returned the requested resource in the response body.
+
+​
+balance
+stringrequired
+returned in decimal format
+
+Examples:
+"4300"
+
+
+
+import requests
+
+url = "https://rdp.sh/api/v1/billing/balance"
+
+headers = {"Authorization": "<api-key>"}
+
+response = requests.get(url, headers=headers)
+
+print(response.json())
+
+
+
+{
+  "balance": "4300"
+}

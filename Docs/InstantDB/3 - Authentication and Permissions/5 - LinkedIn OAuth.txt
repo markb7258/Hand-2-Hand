@@ -1,0 +1,90 @@
+Instant supports logging users in with their LinkedIn account. There are a few ways to do this: it depends on whether you are building for web or React Native.
+
+Choose the option that sounds best to you, and the rest of the document will show you how to add Sign in with LinkedIn to your app.
+
+Building for Web?
+Web Redirect
+Easier to integrate, but doesn't let you render your custom app name.
+Building for React Native?
+Expo Web Auth
+Use Expo's auth session to integrate browser-based sign-in. Easier to implement, but doesn't let you render your custom app name.
+Overview
+
+There are three main steps:
+
+LinkedIn Developer Console: Create an Oauth client.
+Instant Dashboard: Connect your Oauth client to Instant
+Your app: Add some code to log in with LinkedIn!
+Let's dive deeper in each step:
+
+1. Create an Oauth client
+
+Head to the LinkedIn developer portal and create a new application (or open an existing one).
+In the Auth tab enable Sign In with LinkedIn.
+Add the following redirect URI to your application:
+https://api.instantdb.com/runtime/oauth/callback
+Save your Client ID and your Client Secret -- you'll need it for the next step!
+2. Connect your Oauth client to Instant
+
+Go to the Instant dashboard and select the Auth tab for your app.
+
+Add your Oauth Client on Instant
+
+Click "Set up LinkedIn"
+Enter your "Client ID"
+Enter your "Client Secret"
+Click "Add Client"
+Register your website with Instant
+
+In the Auth tab, add the url of the websites where you are using Instant to the Redirect Origins. If you're testing from localhost, add http://localhost:3000, replacing 3000 with the port you use. For production, add your website's domain.
+
+And voila, you are connected!
+
+3. Add some code!
+
+Method: Web Redirect
+
+Create an authorization URL via db.auth.createAuthorizationURL and then use the url to create a link. Here's a full example:
+
+'use client';
+
+import React, { useState } from 'react';
+import { init } from '@instantdb/react';
+
+const APP_ID = '__APP_ID__';
+
+const db = init({ appId: APP_ID });
+
+const url = db.auth.createAuthorizationURL({
+  // Use the linkedin client name in the Instant dashboard auth tab
+  clientName: 'REPLACE_ME',
+  redirectURL: window.location.href,
+});
+
+import React from 'react';
+
+export default function App() {
+  return (
+    <>
+      <db.SignedIn>
+        <UserInfo />
+      </db.SignedIn>
+      <db.SignedOut>
+        <Login />
+      </db.SignedOut>
+    </>
+  );
+}
+
+function UserInfo() {
+  const user = db.useUser();
+  return <h1>Hello {user.email}!</h1>;
+}
+
+function Login() {
+  return <a href={url}>Log in with LinkedIn</a>;
+}
+Copy
+When your users clicks on the link, they'll be redirected to LinkedIn to start the OAuth flow and then back to your site.
+
+Instant will automatically log them in to your app when they are redirected!

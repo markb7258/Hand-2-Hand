@@ -1,0 +1,74 @@
+List all environments in a project.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+uuid
+*
+Project UUID
+
+Type
+string
+Required
+Responses
+200
+400
+401
+404
+422
+List of environments
+Content-Type
+application/json
+Schema
+JSON
+
+[
+{
+"id": 
+0,
+"name": 
+"string",
+"project_id": 
+0,
+"created_at": 
+"string",
+"updated_at": 
+"string",
+"description": 
+"string"
+}
+]
+
+GET
+/projects/{uuid}/environments
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+uuid*
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.get(
+    "https://app.coolify.io/api/v1/projects/%7Buuid%7D/environments",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

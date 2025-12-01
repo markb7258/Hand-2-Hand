@@ -1,0 +1,43 @@
+Get Coolify version.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Responses
+200
+400
+401
+Returns the version of the application
+Content-Type
+text/html
+Schema
+JSON
+
+"string"
+
+GET
+/version
+Authorization
+bearerAuth
+Token
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.get("https://app.coolify.io/api/v1/version",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

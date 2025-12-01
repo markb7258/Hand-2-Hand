@@ -1,0 +1,63 @@
+Restart database. Post request is also accepted.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+uuid
+*
+UUID of the database.
+
+Type
+string
+Required
+format
+uuid
+Responses
+200
+400
+401
+404
+Restart database.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"message": 
+"Database restaring request queued."
+}
+
+GET
+/databases/{uuid}/restart
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+uuid*
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.get(
+    "https://app.coolify.io/api/v1/databases/%7Buuid%7D/restart",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

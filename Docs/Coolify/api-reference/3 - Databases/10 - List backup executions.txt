@@ -1,0 +1,84 @@
+Get all executions for a specific backup configuration.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+uuid
+*
+UUID of the database
+
+Type
+string
+Required
+scheduled_backup_uuid
+*
+UUID of the backup configuration
+
+Type
+string
+Required
+format
+uuid
+Responses
+200
+404
+List of backup executions
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"executions": 
+[
+{
+"uuid": 
+"string",
+"filename": 
+"string",
+"size": 
+0,
+"created_at": 
+"string",
+"message": 
+"string",
+"status": 
+"string"
+}
+]
+}
+
+GET
+/databases/{uuid}/backups/{scheduled_backup_uuid}/executions
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+uuid*
+scheduled_backup_uuid*
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.get(
+    "https://app.coolify.io/api/v1/databases/%7Buuid%7D/backups/%7Bscheduled_backup_uuid%7D/executions",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

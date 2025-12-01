@@ -1,0 +1,97 @@
+List all envs by application UUID.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+uuid
+*
+UUID of the application.
+
+Type
+string
+Required
+format
+uuid
+Responses
+200
+400
+401
+404
+All environment variables by application UUID.
+Content-Type
+application/json
+Schema
+JSON
+
+[
+{
+"id": 
+0,
+"uuid": 
+"string",
+"resourceable_type": 
+"string",
+"resourceable_id": 
+0,
+"is_literal": 
+true,
+"is_multiline": 
+true,
+"is_preview": 
+true,
+"is_runtime": 
+true,
+"is_buildtime": 
+true,
+"is_shared": 
+true,
+"is_shown_once": 
+true,
+"key": 
+"string",
+"value": 
+"string",
+"real_value": 
+"string",
+"version": 
+"string",
+"created_at": 
+"string",
+"updated_at": 
+"string"
+}
+]
+
+GET
+/applications/{uuid}/envs
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+uuid*
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.get(
+    "https://app.coolify.io/api/v1/applications/%7Buuid%7D/envs",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

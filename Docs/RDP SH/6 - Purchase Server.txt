@@ -1,0 +1,52 @@
+This API endpoint allows you to purchase a new server using your available balance.
+
+POST
+/
+order
+
+Try it
+Authorizations
+​
+Authorization
+stringheaderrequired
+Query Parameters
+​
+distro_id
+integerrequired
+​
+region_id
+integerrequired
+Examples:
+1
+​
+plan_id
+integerrequired
+Response
+201 - application/json
+The request was successful, and a new resource was created.
+
+​
+success
+booleanrequired
+​
+server_id
+integer
+
+
+
+import requests
+
+url = "https://rdp.sh/api/v1/order"
+
+headers = {"Authorization": "<api-key>"}
+
+response = requests.post(url, headers=headers)
+
+print(response.json())
+
+
+
+{
+  "success": true,
+  "server_id": 123
+}

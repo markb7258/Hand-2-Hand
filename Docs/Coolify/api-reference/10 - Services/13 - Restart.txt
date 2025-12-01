@@ -1,0 +1,73 @@
+Restart service. Post request is also accepted.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+uuid
+*
+UUID of the service.
+
+Type
+string
+Required
+format
+uuid
+Query Parameters
+latest
+Pull latest images.
+
+Type
+boolean
+default
+false
+Responses
+200
+400
+401
+404
+Restart service.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"message": 
+"Service restaring request queued."
+}
+
+GET
+/services/{uuid}/restart
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+uuid*
+latest
+
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.get(
+    "https://app.coolify.io/api/v1/services/%7Buuid%7D/restart",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

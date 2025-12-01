@@ -1,0 +1,74 @@
+Get application logs by UUID.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+uuid
+*
+UUID of the application.
+
+Type
+string
+Required
+format
+uuid
+Query Parameters
+lines
+Number of lines to show from the end of the logs.
+
+Type
+integer
+format
+int32
+default
+100
+Responses
+200
+400
+401
+404
+Get application logs by UUID.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"logs": 
+"string"
+}
+
+GET
+/applications/{uuid}/logs
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+uuid*
+lines
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.get(
+    "https://app.coolify.io/api/v1/applications/%7Buuid%7D/logs",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

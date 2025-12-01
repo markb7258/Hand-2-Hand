@@ -1,0 +1,73 @@
+Delete env by UUID.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+uuid
+*
+UUID of the service.
+
+Type
+string
+Required
+format
+uuid
+env_uuid
+*
+UUID of the environment variable.
+
+Type
+string
+Required
+format
+uuid
+Responses
+200
+400
+401
+404
+Environment variable deleted.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"message": 
+"Environment variable deleted."
+}
+
+DELETE
+/services/{uuid}/envs/{env_uuid}
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+uuid*
+env_uuid*
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.delete(
+    "https://app.coolify.io/api/v1/services/%7Buuid%7D/envs/%7Benv_uuid%7D",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

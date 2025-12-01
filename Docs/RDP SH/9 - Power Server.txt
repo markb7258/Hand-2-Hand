@@ -1,0 +1,52 @@
+Change the power state of your server.
+
+POST
+/
+servers
+/
+{server}
+/
+power
+/
+{state}
+
+Try it
+Authorizations
+​
+Authorization
+stringheaderrequired
+Path Parameters
+​
+server
+stringrequired
+​
+state
+enum<string>required
+Available options: reset, start, stop 
+Examples:
+"start"
+Response
+200 - application/json
+The request was successful, and the server has returned the requested resource in the response body.
+
+​
+status
+booleanrequired
+
+
+
+import requests
+
+url = "https://rdp.sh/api/v1/servers/{server}/power/{state}"
+
+headers = {"Authorization": "<api-key>"}
+
+response = requests.post(url, headers=headers)
+
+print(response.json())
+
+
+
+{
+  "status": true
+}

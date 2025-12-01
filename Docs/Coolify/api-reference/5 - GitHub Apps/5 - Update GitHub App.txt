@@ -1,0 +1,156 @@
+Update an existing GitHub app.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+github_app_id
+*
+GitHub App ID
+
+Type
+integer
+Required
+Request Body
+Schema
+JSON
+
+{
+"name": 
+"string",
+"organization": 
+"string",
+"api_url": 
+"string",
+"html_url": 
+"string",
+"custom_user": 
+"string",
+"custom_port": 
+0,
+"app_id": 
+0,
+"installation_id": 
+0,
+"client_id": 
+"string",
+"client_secret": 
+"string",
+"webhook_secret": 
+"string",
+"private_key_uuid": 
+"string",
+"is_system_wide": 
+true
+}
+Responses
+200
+401
+404
+422
+GitHub app updated successfully
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"message": 
+"GitHub app updated successfully",
+"data": 
+{
+}
+}
+
+PATCH
+/github-apps/{github_app_id}
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+github_app_id*
+Body
+
+
+{
+name
+:
+string 
+organization
+:
+string 
+api_url
+:
+string 
+html_url
+:
+string 
+custom_user
+:
+string 
+custom_port
+:
+0 
+app_id
+:
+0 
+installation_id
+:
+0 
+client_id
+:
+string 
+client_secret
+:
+string 
+webhook_secret
+:
+string 
+private_key_uuid
+:
+string 
+is_system_wide
+:
+true 
+}
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.patch(
+    "https://app.coolify.io/api/v1/github-apps/%7Bgithub_app_id%7D",
+    headers={
+      "Authorization": "Bearer Token",
+      "Content-Type": "application/json"
+    },
+    json={
+      "name": "string",
+      "organization": "string",
+      "api_url": "string",
+      "html_url": "string",
+      "custom_user": "string",
+      "custom_port": 0,
+      "app_id": 0,
+      "installation_id": 0,
+      "client_id": "string",
+      "client_secret": "string",
+      "webhook_secret": "string",
+      "private_key_uuid": "string",
+      "is_system_wide": true
+    }
+)

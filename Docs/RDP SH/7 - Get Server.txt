@@ -1,0 +1,98 @@
+Retrieve a single server.
+
+GET
+/
+servers
+/
+{server}
+
+Try it
+Authorizations
+​
+Authorization
+stringheaderrequired
+Path Parameters
+​
+server
+stringrequired
+Query Parameters
+​
+server
+string
+Server Id
+
+Response
+200 - application/json
+The request was successful, and the server has returned the requested resource in the response body.
+
+​
+id
+string
+Examples:
+"1"
+​
+node
+string
+Examples:
+"001-ams"
+​
+rdns
+string
+Examples:
+"1.3.3.7.powered.by.rdp.sh."
+​
+distro
+string
+Examples:
+"Windows Server 2025""Debian 12""Debian 11""Ubuntu 24.04 LTS"
+​
+status
+string
+Examples:
+"stopped"
+​
+plan_id
+integer
+Examples:
+1
+​
+created_at
+string
+Examples:
+"2023-12-23T01:06:46.000Z"
+​
+ip_address
+string
+Examples:
+"1.3.3.7"
+​
+expiry_date
+string
+Examples:
+"2024-11-20T05:20:00.000Z"
+
+
+
+import requests
+
+url = "https://rdp.sh/api/v1/servers/{server}"
+
+headers = {"Authorization": "<api-key>"}
+
+response = requests.get(url, headers=headers)
+
+print(response.json())
+
+
+
+{
+  "id": "1",
+  "node": "001-ams",
+  "rdns": "1.3.3.7.powered.by.rdp.sh.",
+  "distro": "Windows Server 2025",
+  "status": "stopped",
+  "plan_id": 1,
+  "created_at": "2023-12-23T01:06:46.000Z",
+  "ip_address": "1.3.3.7",
+  "expiry_date": "2024-11-20T05:20:00.000Z"
+}

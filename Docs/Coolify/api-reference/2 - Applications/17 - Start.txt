@@ -1,0 +1,84 @@
+Start application. Post request is also accepted.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+uuid
+*
+UUID of the application.
+
+Type
+string
+Required
+format
+uuid
+Query Parameters
+force
+Force rebuild.
+
+Type
+boolean
+default
+false
+instant_deploy
+Instant deploy (skip queuing).
+
+Type
+boolean
+default
+false
+Responses
+200
+400
+401
+404
+Start application.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"message": 
+"Deployment request queued.",
+"deployment_uuid": 
+"doogksw"
+}
+
+GET
+/applications/{uuid}/start
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+uuid*
+force
+
+instant_deploy
+
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.get(
+    "https://app.coolify.io/api/v1/applications/%7Buuid%7D/start",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

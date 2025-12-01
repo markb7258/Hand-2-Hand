@@ -1,0 +1,74 @@
+Create Project.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Request Body
+Schema
+JSON
+
+{
+"name": 
+"string",
+"description": 
+"string"
+}
+Responses
+201
+400
+401
+404
+422
+Project created.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"uuid": 
+"og888os"
+}
+
+POST
+/projects
+Authorization
+bearerAuth
+Token
+Body
+
+
+{
+name
+:
+string 
+description
+:
+string 
+}
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.post("https://app.coolify.io/api/v1/projects",
+    headers={
+      "Authorization": "Bearer Token",
+      "Content-Type": "application/json"
+    },
+    json={
+      "name": "string",
+      "description": "string"
+    }
+)

@@ -1,0 +1,65 @@
+Restart application. Post request is also accepted.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+uuid
+*
+UUID of the application.
+
+Type
+string
+Required
+format
+uuid
+Responses
+200
+400
+401
+404
+Restart application.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"message": 
+"Restart request queued.",
+"deployment_uuid": 
+"doogksw"
+}
+
+GET
+/applications/{uuid}/restart
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+uuid*
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.get(
+    "https://app.coolify.io/api/v1/applications/%7Buuid%7D/restart",
+    headers={
+      "Authorization": "Bearer Token"
+    }
+)

@@ -1,0 +1,30 @@
+Healthcheck endpoint.
+
+Responses
+200
+400
+401
+Healthcheck endpoint.
+Content-Type
+text/html
+Schema
+JSON
+
+"string"
+
+GET
+/health
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.get("https://app.coolify.io/api/v1/health")

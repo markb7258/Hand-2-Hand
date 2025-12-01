@@ -1,0 +1,76 @@
+Instant supports Sign In with Apple on the Web and in native applications.
+
+Web Popup (recommended)
+Use Apple-provided popup to authenticate users
+Web Redirect
+Use redirect flow to authenticate users
+React Native
+Authenticating in React Native app
+Step 1: Create App ID
+
+Navigate to Certificates, Identifiers & Profiles
+Select Identifiers
+Click +
+Register a new identifier → Select App IDs
+Select a type → Select App
+Capabilities → Sign In with Apple → Check
+Fill in Bundle ID and Description
+Click Register
+Step 2: Create Services ID
+
+Navigate to Services IDs
+Click +
+Register a new identifier → Select Services IDs
+Fill in Description and Identifier. You’ll need this Identifier later
+Click Register
+Step 3: Configure Services ID (Web Popup flow)
+
+Select newly created Services ID
+Enable Sign In with Apple
+Click Configure
+Select Primary App ID from Step 1
+To Domains, add your app domain (e.g. myapp.com)
+To Return URLs, add URL of your app where authentication happens (e.g. https://myapp.com/signin)
+Click Continue → Save
+Step 4: Register your OAuth client with Instant
+
+Go to the Instant dashboard and select Auth tab.
+Select Add Apple Client
+Select unique clientName (apple by default, will be used in db.auth calls)
+Fill in Services ID from Step 2
+Click Add Apple Client
+Step 5: Add Sign In code to your app (Web Popup flow)
+
+Add Apple Sign In library to your app:
+
+https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js
+Initialize with Services ID from Step 2:
+
+AppleID.auth.init({
+  clientId: '<Services ID>',
+  scope: 'name email',
+  redirectURI: window.location.href,
+});
+Copy
+Implement signInPopup using clientName from Step 4:
+
+async function signInPopup() {
+  let nonce = crypto.randomUUID();
+
+  // authenticate with Apple
+  let resp = await AppleID.auth.signIn({
+    nonce: nonce,
+    usePopup: true,
+  });
+
+  // authenticate with Instant
+  await db.auth.signInWithIdToken({
+    clientName: '<clientName>',
+    idToken: resp.authorization.id_token,
+    nonce: nonce,
+  });
+}
+Copy
+Add Sign In button:
+
+<button onClick={signInPopup}>Sign In with Apple</button>

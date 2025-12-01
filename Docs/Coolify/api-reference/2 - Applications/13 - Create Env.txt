@@ -1,0 +1,113 @@
+Create env by application UUID.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+uuid
+*
+UUID of the application.
+
+Type
+string
+Required
+format
+uuid
+Request Body
+Schema
+JSON
+
+{
+"key": 
+"string",
+"value": 
+"string",
+"is_preview": 
+true,
+"is_literal": 
+true,
+"is_multiline": 
+true,
+"is_shown_once": 
+true
+}
+Responses
+201
+400
+401
+404
+Environment variable created.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"uuid": 
+"nc0k04gk8g0cgsk440g0koko"
+}
+
+POST
+/applications/{uuid}/envs
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+uuid*
+Body
+
+
+{
+key
+:
+string 
+value
+:
+string 
+is_preview
+:
+true 
+is_literal
+:
+true 
+is_multiline
+:
+true 
+is_shown_once
+:
+true 
+}
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.post(
+    "https://app.coolify.io/api/v1/applications/%7Buuid%7D/envs",
+    headers={
+      "Authorization": "Bearer Token",
+      "Content-Type": "application/json"
+    },
+    json={
+      "key": "string",
+      "value": "string",
+      "is_preview": true,
+      "is_literal": true,
+      "is_multiline": true,
+      "is_shown_once": true
+    }
+)

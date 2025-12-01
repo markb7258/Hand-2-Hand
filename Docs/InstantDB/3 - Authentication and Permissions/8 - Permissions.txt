@@ -1,0 +1,312 @@
+To secure user data, you can use Instant's Rule Language. Our rule language takes inspiration from Rails' ActiveRecord, Google's CEL, and JSON. Here's an example ruleset below.
+
+// instant.perms.ts
+import type { InstantRules } from '@instantdb/react';
+
+const rules = {
+  "todos": {
+    "allow": {
+      "view": "auth.id != null",
+      "create": "isOwner",
+      "update": "isOwner && isStillOwner",
+      "delete": "isOwner",
+    },
+    "bind": [
+      "isOwner", "auth.id != null && auth.id == data.creatorId",
+      "isStillOwner", "auth.id != null && auth.id == newData.creatorId"
+    ]
+  }
+} satisfies InstantRules;
+
+export default rules;
+Copy
+You can manage permissions via configuration files or through the Instant dashboard.
+
+Permissions as code
+
+With Instant you can define your permissions in code. If you haven't already, use the CLI to generate an instant.perms.ts file:
+
+npx instant-cli@latest init
+Copy
+The CLI will guide you through picking an Instant app and generate these files for you. Once you've made changes to instant.perms.ts, you can use the CLI to push those changes to production:
+
+npx instant-cli@latest push perms
+Copy
+Permissions in the dashboard
+
+For each app in your dashboard, you’ll see a permissions editor. Permissions are expressed as JSON. Each top level key represents one of your namespaces — for example goals, todos, and the like. There is also a special top-level key attrs for defining permissions on creating new types of namespaces and attributes.
+
+Namespaces
+
+For each namespace you can define allow rules for view, create, update, delete. Rules must be boolean expressions.
+
+If a rule is not set then by default it evaluates to true. The following three rulesets are all equivalent:
+
+In this example we explicitly set each action for todos to true
+
+{
+  "todos": {
+    "allow": {
+      "view": "true",
+      "create": "true",
+      "update": "true",
+      "delete": "true"
+    }
+  }
+}
+In this example we explicitly set view to be true. However, all the remaining actions for todo also default to true.
+
+{
+  "todos": {
+    "allow": {
+      "view": "true"
+    }
+  }
+}
+In this example we set no rules, and thus all permission checks pass.
+
+{}
+When you start developing you probably won't worry about permissions. However, once you start shipping your app to users you will want to secure their data!
+View
+
+view rules are evaluated when doing db.useQuery. On the backend every object that satisfies a query will run through the view rule before being passed back to the client. This means as a developer you can ensure that no matter what query a user executes, they’ll only see data that they are allowed to see.
+
+Create, Update, Delete
+
+Similarly, for each object in a transaction, we make sure to evaluate the respective create, update, and delete rule.
+
+Transactions will fail if a user does not have adequate permission.
+
+Default permissions
+
+By default, all permissions are considered to be "true". To change that, use "$default" key. This:
+
+{
+  "todos": {
+    "allow": {
+      "$default": "false"
+    }
+  }
+}
+is equivalent to this:
+
+{
+  "todos": {
+    "allow": {
+      "view": "false",
+      "create": "false",
+      "update": "false",
+      "delete": "false"
+    }
+  }
+}
+Specific keys can override defaults:
+
+{
+  "todos": {
+    "allow": {
+      "$default": "false",
+      "view": "true"
+    }
+  }
+}
+You can use $default as the namespace:
+
+{
+  "$default": {
+    "allow": {
+      "view": "false"
+    }
+  },
+  "todos": {
+    "allow": {
+      "view": "true"
+    }
+  }
+}
+Finally, the ultimate default:
+
+{
+  "$default": {
+    "allow": {
+      "$default": "false"
+    }
+  }
+}
+Attrs
+
+Attrs are a special kind of namespace for creating new types of data on the fly. Currently we only support create rules on attrs. During development you likely don't need to lock this rule down, but once you ship you will likely want to set this permission to false
+
+Suppose our data model looks like this
+
+{
+  "goals": { "id": UUID, "title": string }
+}
+And we have a rules defined as
+
+{
+  "attrs": { "allow": { "create": "false" } }
+}
+Then we could create goals with existing attr types:
+
+db.transact(db.tx.goals[id()].update({title: "Hello World"})
+But we would not be able to create goals with new attr types:
+
+db.transact(db.tx.goals[id()].update({title: "Hello World", priority: "high"})
+CEL expressions
+
+Inside each rule, you can write CEL code that evaluates to either true or false.
+
+{
+  "todos": {
+    "allow": {
+      "view": "auth.id != null",
+      "create": "auth.id in data.ref('creator.id')",
+      "update": "!(newData.title == data.title)",
+      "delete": "'joe@instantdb.com' in data.ref('users.email')"
+    }
+  }
+}
+The above example shows a taste of the kind of rules you can write :)
+
+data
+
+data refers to the object you have saved. This will be populated when used for view, create, update, delete rules.
+
+newData
+
+In update, you'll also have access to newData. This refers to the changes that are being made to the object.
+
+bind
+
+bind allows you to alias logic. The following are equivalent
+
+{
+  "todos": {
+    "allow": {
+      "create": "isOwner"
+    },
+    "bind": ["isOwner", "auth.id != null && auth.id == data.creatorId"]
+  }
+}
+{
+  "todos": {
+    "allow": {
+      "create": "auth.id != null && auth.id == data.creatorId"
+    }
+  }
+}
+bind is useful for not repeating yourself and tidying up rules
+
+{
+  "todos": {
+    "allow": {
+      "create": "isOwner || isAdmin"
+    },
+    "bind": [
+      "isOwner",
+      "auth.id != null && auth.id == data.creatorId",
+      "isAdmin",
+      "auth.email in ['joe@instantdb.com', 'stopa@instantdb.com']"
+    ]
+  }
+}
+ref
+
+You can also refer to relations in your permission checks. This rule restricts delete to only succeed on todos associated with a specific user email.
+
+{
+  "todos": {
+    "allow": {
+      "delete": "'joe@instantdb.com' in data.ref('users.email')"
+    }
+  }
+}
+ref works on the auth object too. Here's how you could restrict deletes to users with the 'admin' role:
+
+{
+  "todos": {
+    "allow": {
+      "delete": "'admin' in auth.ref('$user.role.type')"
+    },
+  },
+};
+See managing users to learn more about that.
+
+ruleParams
+
+Imagine you have a documents namespace, and want to implement a rule like "Only people who know my document's id can access it."
+
+You can use ruleParams to write that rule. ruleParams let you pass extra options to your queries and transactions.
+
+For example, pass a knownDocId param to our query:
+
+// You could get your doc's id from the URL for example
+const myDocId = getId(window.location);
+
+const query = {
+  docs: {},
+};
+const { data } = db.useQuery(query, {
+  ruleParams: { knownDocId: myDocId }, // Pass the id to ruleParams!
+});
+Or to your transactions:
+
+db.transact(
+  db.tx.docs[id].ruleParams({ knownDocId: id }).update({ title: 'eat' }),
+);
+And then use it in your permission rules:
+
+{
+  "documents": {
+    "allow": {
+      "view": "data.id == ruleParams.knownDocId",
+      "update": "data.id == ruleParams.knownDocId",
+      "delete": "data.id == ruleParams.knownDocId"
+    }
+  }
+}
+With that, you've implemented the rule "Only people who know my document's id can access it."!
+
+Here are some more patterns
+
+If you want to: access a document and all related comments by one knownDocId:
+
+{
+  "docs": {
+    "view": "data.id == ruleParams.knownDocId"
+  },
+  "comment": {
+    "view": "ruleParams.knownDocId in data.ref('parent.id')"
+  }
+}
+Or, if you want to allow multiple documents:
+
+db.useQuery(..., { knownDocIds: [id1, id2, ...] })
+{
+  "docs": {
+    "view": "data.id in ruleParams.knownDocIds"
+  }
+}
+To create a “share links” feature, where you have multiple links to the same doc, you can create a separate namespace:
+
+{
+  "docs": {
+    "view": "ruleParams.secret in data.ref('docLinks.secret')"
+  }
+}
+Or if you want to separate “view links” from “edit links”, you can use two namespaces like this:
+
+{
+  "docs": {
+    "view": "hasViewerSecret || hasEditorSecret",
+    "update": "hasEditorSecret",
+    "delete": "hasEditorSecret",
+    "bind": [
+      "hasViewerSecret",
+      "ruleParams.secret in data.ref('docViewLinks.secret')",
+      "hasEditorSecret",
+      "ruleParams.secret in data.ref('docEditLinks.secret')"
+    ]
+  }
+}

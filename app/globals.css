@@ -1,0 +1,187 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy-900: #0a1628;
+  --navy-800: #0f1f3a;
+  --navy-700: #142949;
+  --cyan-400: #22d3ee;
+  --cyan-500: #06b6d4;
+/* Force dark theme */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #0a1628;
+  color: #f8fafc;
+  font-weight: 400;
+  letter-spacing: normal;
+}
+
+/* Simple, clean heading style */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+/* Better heading rendering */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Remove shimmer animation since it's annoying */
+.shimmer {
+  background: none;
+  animation: none;
+}
+  background-color: #0a1628;
+  color: #f8fafc;
+}
+
+/* Ensure all inputs and textareas have light text on dark backgrounds */
+input,
+textarea {
+  @apply text-slate-100 bg-navy-800/50;
+}
+
+input::placeholder,
+textarea::placeholder {
+  @apply text-slate-400;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Dark Glass Morphism Effects */
+  .glass-card {
+    background: rgba(15, 31, 58, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(34, 211, 238, 0.2);
+  }
+  
+  .glass-morphism {
+    background: rgba(20, 41, 73, 0.8);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(34, 211, 238, 0.15);
+  }
+  
+  /* Dark Navy Gradients */
+  .gradient-bg {
+    background: linear-gradient(135deg, #0a1628 0%, #0f1f3a 50%, #142949 100%);
+  }
+  
+  .gradient-bg-alt {
+    background: linear-gradient(to bottom right, #0a1628, #0f1f3a, #142949);
+  }
+  
+  .gradient-accent {
+    background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%);
+  }
+  
+  /* Cyan Glow Effects */
+  .border-luxury {
+    border-image: linear-gradient(to right, #06b6d4, #22d3ee) 1;
+  }
+  
+  .shadow-luxury-glow {
+    box-shadow: 0 0 30px rgba(34, 211, 238, 0.3), 0 10px 40px rgba(0, 0, 0, 0.5);
+  }
+  
+  .shadow-cyan-glow {
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.4), 0 5px 20px rgba(6, 182, 212, 0.3);
+  }
+  
+  /* Subtle Dark Background Pattern */
+  .bg-pattern {
+    background-image:
+      radial-gradient(circle at 25% 25%, rgba(34, 211, 238, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, rgba(6, 182, 212, 0.05) 0%, transparent 50%);
+  }
+  
+  /* Cyan Shimmer Effect */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(34, 211, 238, 0.1),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+  
+  /* Premium Font Rendering */
+  .text-luxury {
+    letter-spacing: -0.02em;
+    font-feature-settings: 'liga' 1, 'calt' 1;
+  }
+}
+
+/* Custom Dark Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f1f3a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #22d3ee;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #06b6d4;
+}
+
+@layer base {
+  :root {
+    /* Dark Navy Theme */
+    --background: 215 100% 9%;
+    --foreground: 210 40% 98%;
+    --card: 217 40% 12%;
+    --card-foreground: 210 40% 98%;
+    --popover: 217 40% 12%;
+    --popover-foreground: 210 40% 98%;
+    /* Cyan primary color */
+    --primary: 189 94% 43%;
+    --primary-foreground: 215 100% 9%;
+    /* Navy secondary */
+    --secondary: 217 40% 15%;
+    --secondary-foreground: 189 94% 53%;
+    --muted: 217 40% 15%;
+    --muted-foreground: 215 20% 65%;
+    /* Cyan accent */
+    --accent: 189 94% 53%;
+    --accent-foreground: 215 100% 9%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 40% 20%;
+    --input: 217 40% 15%;
+    /* Cyan ring */
+    --ring: 189 94% 53%;
+    --chart-1: 189 94% 43%;
+    --chart-2: 189 94% 53%;
+    --chart-3: 189 94% 63%;
+    --chart-4: 189 94% 73%;
+    --chart-5: 189 94% 83%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

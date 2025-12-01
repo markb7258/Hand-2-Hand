@@ -1,0 +1,157 @@
+Update a specific backup configuration for a given database, identified by its UUID and the backup ID
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Parameters
+Path Parameters
+uuid
+*
+UUID of the database.
+
+Type
+string
+Required
+format
+uuid
+scheduled_backup_uuid
+*
+UUID of the backup configuration.
+
+Type
+string
+Required
+format
+uuid
+Request Body
+Schema
+JSON
+
+{
+"save_s3": 
+true,
+"s3_storage_uuid": 
+"string",
+"backup_now": 
+true,
+"enabled": 
+true,
+"databases_to_backup": 
+"string",
+"dump_all": 
+true,
+"frequency": 
+"string",
+"database_backup_retention_amount_locally": 
+0,
+"database_backup_retention_days_locally": 
+0,
+"database_backup_retention_max_storage_locally": 
+0,
+"database_backup_retention_amount_s3": 
+0,
+"database_backup_retention_days_s3": 
+0,
+"database_backup_retention_max_storage_s3": 
+0
+}
+Responses
+200
+400
+401
+404
+422
+Database backup configuration updated
+
+PATCH
+/databases/{uuid}/backups/{scheduled_backup_uuid}
+Authorization
+bearerAuth
+Token
+Variables
+Key
+Value
+uuid*
+scheduled_backup_uuid*
+Body
+
+
+{
+save_s3
+:
+true 
+s3_storage_uuid
+:
+string 
+backup_now
+:
+true 
+enabled
+:
+true 
+databases_to_backup
+:
+string 
+dump_all
+:
+true 
+frequency
+:
+string 
+database_backup_retention_amount_locally
+:
+0 
+database_backup_retention_days_locally
+:
+0 
+database_backup_retention_max_storage_locally
+:
+0 
+database_backup_retention_amount_s3
+:
+0 
+database_backup_retention_days_s3
+:
+0 
+database_backup_retention_max_storage_s3
+:
+0 
+}
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.patch(
+    "https://app.coolify.io/api/v1/databases/%7Buuid%7D/backups/%7Bscheduled_backup_uuid%7D",
+    headers={
+      "Authorization": "Bearer Token",
+      "Content-Type": "application/json"
+    },
+    json={
+      "save_s3": true,
+      "s3_storage_uuid": "string",
+      "backup_now": true,
+      "enabled": true,
+      "databases_to_backup": "string",
+      "dump_all": true,
+      "frequency": "string",
+      "database_backup_retention_amount_locally": 0,
+      "database_backup_retention_days_locally": 0,
+      "database_backup_retention_max_storage_locally": 0,
+      "database_backup_retention_amount_s3": 0,
+      "database_backup_retention_days_s3": 0,
+      "database_backup_retention_max_storage_s3": 0
+    }
+)

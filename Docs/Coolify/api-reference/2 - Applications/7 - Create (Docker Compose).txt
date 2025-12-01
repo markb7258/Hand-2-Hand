@@ -1,0 +1,134 @@
+Create new application based on a docker-compose file.
+
+Authorizations
+bearerAuth
+Go to Keys & Tokens / API tokens and create a new token. Use the token as the bearer token.
+
+Type
+HTTP (bearer)
+Request Body
+Schema
+JSON
+
+{
+"project_uuid": 
+"string",
+"server_uuid": 
+"string",
+"environment_name": 
+"string",
+"environment_uuid": 
+"string",
+"docker_compose_raw": 
+"string",
+"destination_uuid": 
+"string",
+"name": 
+"string",
+"description": 
+"string",
+"instant_deploy": 
+true,
+"use_build_server": 
+true,
+"connect_to_docker_network": 
+true,
+"force_domain_override": 
+true
+}
+Responses
+201
+400
+401
+409
+Application created successfully.
+Content-Type
+application/json
+Schema
+JSON
+
+{
+"uuid": 
+"string"
+}
+
+POST
+/applications/dockercompose
+Authorization
+bearerAuth
+Token
+Body
+
+
+{
+project_uuid
+:
+string 
+server_uuid
+:
+string 
+environment_name
+:
+string 
+environment_uuid
+:
+string 
+docker_compose_raw
+:
+string 
+destination_uuid
+:
+string 
+name
+:
+string 
+description
+:
+string 
+instant_deploy
+:
+true 
+use_build_server
+:
+true 
+connect_to_docker_network
+:
+true 
+force_domain_override
+:
+true 
+}
+Try it out
+Samples
+
+Bruno
+
+cURL
+
+JavaScript
+
+PHP
+
+Python
+
+requests.post(
+    "https://app.coolify.io/api/v1/applications/dockercompose",
+    headers={
+      "Authorization": "Bearer Token",
+      "Content-Type": "application/json"
+    },
+    json={
+      "project_uuid": "string",
+      "server_uuid": "string",
+      "environment_name": "string",
+      "environment_uuid": "string",
+      "docker_compose_raw": "string",
+      "destination_uuid": "string",
+      "name": "string",
+      "description": "string",
+      "instant_deploy": true,
+      "use_build_server": true,
+      "connect_to_docker_network": true,
+      "force_domain_override": true
+    }
+)

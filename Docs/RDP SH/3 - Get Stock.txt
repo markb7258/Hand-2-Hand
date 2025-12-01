@@ -1,0 +1,58 @@
+GET
+/
+stock
+
+Try it
+Authorizations
+​
+Authorization
+stringheaderrequired
+Response
+200 - application/json
+The request was successful, and the server has returned the requested resource in the response body.
+
+​
+stock
+objectrequired
+Show child attributes
+
+​
+region
+objectrequired
+Show child attributes
+
+
+
+import requests
+
+url = "https://rdp.sh/api/v1/stock"
+
+headers = {"Authorization": "<api-key>"}
+
+response = requests.get(url, headers=headers)
+
+print(response.json())
+
+
+
+[
+  {
+    "stock": {
+      "plan": {
+        "id": 1,
+        "cores": 2,
+        "price": 10,
+        "title": "RDP-40-2C-6M",
+        "memory": 6,
+        "storage": 40
+      },
+      "stock": 3,
+      "available": true
+    },
+    "region": {
+      "id": 1,
+      "region": "nl",
+      "location": "Amsterdam"
+    }
+  }
+]
