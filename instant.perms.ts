@@ -4,18 +4,18 @@
 const rules = {
   profiles: {
     allow: {
-      view: "auth.id == data.id",
-      create: "auth.id != null",
-      update: "auth.id == data.id",
-      delete: "auth.id == data.id",
+      view: "auth.id in data.ref('user.id')", // Users can view their own profile
+      create: "auth.id != null", // Authenticated users can create profiles
+      update: "auth.id in data.ref('user.id')", // Users can update their own profile
+      delete: "auth.id in data.ref('user.id')", // Users can delete their own profile
     },
   },
   countries: {
     allow: {
       view: "true", // Everyone can view countries
-      create: "auth.id != null && true in auth.ref('$user.profiles.isAdmin')", // Only admins
-      update: "auth.id != null && true in auth.ref('$user.profiles.isAdmin')", // Only admins
-      delete: "auth.id != null && true in auth.ref('$user.profiles.isAdmin')", // Only admins
+      create: "true in auth.ref('$user.profile.isAdmin')", // Only admins
+      update: "true in auth.ref('$user.profile.isAdmin')", // Only admins
+      delete: "true in auth.ref('$user.profile.isAdmin')", // Only admins
     },
   },
   notes: {
@@ -29,9 +29,9 @@ const rules = {
   galleryImages: {
     allow: {
       view: "true", // Everyone can view gallery images
-      create: "auth.id != null && true in auth.ref('$user.profiles.isAdmin')",
-      update: "auth.id != null && true in auth.ref('$user.profiles.isAdmin')",
-      delete: "auth.id != null && true in auth.ref('$user.profiles.isAdmin')",
+      create: "true in auth.ref('$user.profile.isAdmin')",
+      update: "true in auth.ref('$user.profile.isAdmin')",
+      delete: "true in auth.ref('$user.profile.isAdmin')",
     },
   },
 };

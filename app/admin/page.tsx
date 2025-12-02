@@ -21,12 +21,27 @@ export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState<'users' | 'countries' | 'gallery'>('users');
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Query all data
-  const { isLoading, data } = db.useQuery({
-    profiles: {},
-    countries: {},
-    galleryImages: {},
-  });
+  // Query all data and user's profile
+  const { isLoading, data } = db.useQuery(
+    user ? {
+      profiles: {
+        $: { where: { user: user.id } }
+      },
+      allProfiles: {
+        user: {} // Include linked $user to get email
+      },
+      countries: {},
+      galleryImages: {},
+    } : {
+      allProfiles: {
+        user: {}
+      },
+      countries: {},
+      galleryImages: {},
+    }
+  );
+
+  const userProfile = data?.profiles?.[0];
 
   // Check if user is admin
   useEffect(() => {
@@ -36,14 +51,13 @@ export default function AdminPanel() {
     }
 
     if (user && data) {
-      const userProfile = data.profiles.find(p => p.email === user.email);
       if (userProfile?.isAdmin) {
         setIsAdmin(true);
       } else {
         router.push('/dashboard');
       }
     }
-  }, [authLoading, user, data, router]);
+  }, [authLoading, user, data, userProfile, router]);
 
   if (authLoading || isLoading || !user || !isAdmin) {
     return (
@@ -85,7 +99,7 @@ export default function AdminPanel() {
           </TabsList>
 
           <TabsContent value="users">
-            <UsersTab profiles={data?.profiles || []} />
+            <UsersTab profiles={data?.allProfiles || []} />
           </TabsContent>
           <TabsContent value="countries">
             <CountriesTab countries={data?.countries || []} />
@@ -125,7 +139,7 @@ function UsersTab({ profiles }: { profiles: any[] }) {
           {profiles.map((profile) => (
             <div key={profile.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-white/50 backdrop-blur-sm rounded-xl border-2 border-cyan-400/20/20 hover:border-cyan-400/20/40 transition-all duration-300">
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-slate-100 truncate text-sm sm:text-base">{profile.email}</div>
+                <div className="font-semibold text-slate-100 truncate text-sm sm:text-base">{profile.user?.email || 'No email'}</div>
                 <div className="text-xs sm:text-sm mt-1">
                   {profile.isAdmin ? (
                     <Badge className="bg-primary text-white">Admin</Badge>

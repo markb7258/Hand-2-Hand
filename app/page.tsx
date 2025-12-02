@@ -1,17 +1,26 @@
-import { getCurrentUser } from '@/lib/auth';
-import { redirect } from 'next/navigation';
+'use client';
+
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { init } from '@instantdb/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
+const APP_ID = process.env.NEXT_PUBLIC_INSTANT_APP_ID || '7b67f3b1-46b2-4724-a83d-ae3f6a47b087';
+const db = init({ appId: APP_ID });
+
 export default function LandingPage() {
-  // Check if user is already logged in
-  const user = getCurrentUser();
+  const router = useRouter();
+  const { user, isLoading } = db.useAuth();
   
-  if (user && user.isVerified) {
-    redirect('/dashboard');
-  }
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, isLoading, router]);
 
   return (
     <div className="min-h-screen gradient-bg bg-pattern flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">

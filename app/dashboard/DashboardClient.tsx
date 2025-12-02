@@ -1,38 +1,78 @@
 'use client';
 
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { COUNTRIES } from '@/lib/countries';
-import { logoutUser } from '@/app/actions/auth';
-import { db } from '@/lib/instant';
+import { init, id } from '@instantdb/react';
 
-interface DashboardClientProps {
-  user: {
-    userId: string;
-    email: string;
-    isVerified: boolean;
-  };
-  isAdmin: boolean;
-}
+const APP_ID = process.env.NEXT_PUBLIC_INSTANT_APP_ID || '7b67f3b1-46b2-4724-a83d-ae3f6a47b087';
+const ADMIN_EMAIL = 'ericreiss@aol.com';
+const db = init({ appId: APP_ID });
 
-export default function DashboardClient({ user, isAdmin }: DashboardClientProps) {
+export default function DashboardClient() {
   const router = useRouter();
 
+  // Get authenticated user
+  const { user, isLoading } = db.useAuth();
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isLoading, router]);
+
   const handleLogout = async () => {
-    await logoutUser();
+    db.auth.signOut();
     router.push('/');
   };
 
-  // Fetch DB countries to include admin-added ones
-  const { data } = db.useQuery({ countries: {} });
+  // Fetch DB countries to include admin-added ones AND user profile for admin check
+  const { data } = db.useQuery(
+    user ? {
+      countries: {},
+      profiles: { $: { where: { user: user.id } } }
+    } : {
+      countries: {}
+    }
+  );
+  
   const dbCountries = data?.countries || [];
+  const userProfile = data?.profiles?.[0];
+  const isAdmin = userProfile?.isAdmin || false;
+
+  // Create profile if it doesn't exist
+  useEffect(() => {
+    if (user && data && !userProfile) {
+      const profileId = id();
+      const isAdminUser = user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+      db.transact([
+        db.tx.profiles[profileId]
+          .update({
+            displayName: user.email?.split('@')[0] || 'User',
+            isAdmin: isAdminUser,
+          })
+          .link({ user: user.id })
+      ]).catch(err => console.error('Error creating profile:', err));
+    }
+  }, [user, data, userProfile]);
+  
   // Merge static + DB, unique by slug (prefer DB for name/flag overrides)
   const map = new Map<string, any>();
   for (const c of COUNTRIES) map.set(c.slug, c);
   for (const c of dbCountries) map.set(c.slug, { ...map.get(c.slug), ...c });
   const merged = Array.from(map.values());
+
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen gradient-bg bg-pattern flex items-center justify-center">
+        <div className="text-lg text-slate-300 animate-pulse">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen gradient-bg bg-pattern">

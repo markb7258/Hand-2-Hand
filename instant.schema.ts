@@ -3,13 +3,14 @@ import { i } from '@instantdb/core';
 // Define the schema for InstantDB
 const _schema = i.schema({
   entities: {
-    // User profiles with admin status and authentication
+    // InstantDB built-in users (authentication)
+    $users: i.entity({
+      email: i.string().unique().indexed(),
+    }),
+    // User profiles with admin status
     profiles: i.entity({
-      email: i.string(),
-      passwordHash: i.string(),
+      displayName: i.string().optional(),
       isAdmin: i.boolean(),
-      isVerified: i.boolean(),
-      createdAt: i.number(),
     }),
     // Country data (population and groups)
     countries: i.entity({
@@ -37,7 +38,20 @@ const _schema = i.schema({
       order: i.number(),
     }),
   },
-  links: {},
+  links: {
+    userProfile: {
+      forward: {
+        on: 'profiles',
+        has: 'one',
+        label: 'user',
+      },
+      reverse: {
+        on: '$users',
+        has: 'one',
+        label: 'profile',
+      },
+    },
+  },
   rooms: {},
 });
 

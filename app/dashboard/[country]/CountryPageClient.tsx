@@ -9,38 +9,55 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
-import { logoutUser } from '@/app/actions/auth';
 
-const APP_ID = process.env.NEXT_PUBLIC_INSTANT_APP_ID || 'fd93719b-b44d-4edf-a070-819097ba20a3';
+const APP_ID = process.env.NEXT_PUBLIC_INSTANT_APP_ID || '7b67f3b1-46b2-4724-a83d-ae3f6a47b087';
 const db = init({ appId: APP_ID });
 
 interface CountryPageClientProps {
-  userId: string;
   countrySlug: string;
 }
 
-export default function CountryPageClient({ userId, countrySlug }: CountryPageClientProps) {
+export default function CountryPageClient({ countrySlug }: CountryPageClientProps) {
   const router = useRouter();
   const [noteContent, setNoteContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  // Get authenticated user
+  const { user, isLoading: authLoading } = db.useAuth();
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
+
   // Find the country data
   const country = COUNTRIES.find(c => c.slug === countrySlug);
 
   // Query country data and user notes
-  const { isLoading, error, data } = db.useQuery({
-    countries: {
-      $: { where: { slug: countrySlug } }
-    },
-    notes: {
-      $: { where: { userId, countrySlug } }
-    },
-    galleryImages: {
-      $: { where: { countrySlug } }
+  const { isLoading, error, data } = db.useQuery(
+    user ? {
+      countries: {
+        $: { where: { slug: countrySlug } }
+      },
+      notes: {
+        $: { where: { userId: user.id, countrySlug } }
+      },
+      galleryImages: {
+        $: { where: { countrySlug } }
+      }
+    } : {
+      countries: {
+        $: { where: { slug: countrySlug } }
+      },
+      galleryImages: {
+        $: { where: { countrySlug } }
+      }
     }
-  });
+  );
 
   // Load existing note
   useEffect(() => {
@@ -89,12 +106,14 @@ export default function CountryPageClient({ userId, countrySlug }: CountryPageCl
   }, [country, isLoading, data]);
 
   const handleSaveNote = async () => {
+    if (!user) return;
+    
     setIsSaving(true);
     setSaveStatus('');
     
     try {
       // Check if note exists
-      const existingNote = data?.notes[0];
+      const existingNote = data?.notes?.[0];
       
       if (existingNote) {
         // Update existing note
@@ -109,7 +128,7 @@ export default function CountryPageClient({ userId, countrySlug }: CountryPageCl
         const noteId = crypto.randomUUID();
         await db.transact([
           db.tx.notes[noteId].update({
-            userId,
+            userId: user.id,
             countrySlug,
             content: noteContent,
             updatedAt: Date.now(),
@@ -128,7 +147,7 @@ export default function CountryPageClient({ userId, countrySlug }: CountryPageCl
   };
 
   const handleLogout = async () => {
-    await logoutUser();
+    db.auth.signOut();
     router.push('/');
   };
 
@@ -298,7 +317,7 @@ export default function CountryPageClient({ userId, countrySlug }: CountryPageCl
               value={noteContent}
               onChange={(e) => setNoteContent(e.target.value)}
               placeholder="Enter your personal notes about this country..."
-              className="h-48 resize-none bg-white/90"
+              className="h-48 resize-none bg-white/90 text-slate-900 placeholder:text-slate-500"
             />
             <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
               <Button
