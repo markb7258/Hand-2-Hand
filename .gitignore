@@ -35,3 +35,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Warp Agent Memory System (contains credentials)
+WARP_AGENT_LOG.md
+WARP_AGENT_TRANSCRIPTS/

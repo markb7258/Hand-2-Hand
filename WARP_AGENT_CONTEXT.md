@@ -269,7 +269,7 @@ After completing the boot sequence above, you MUST:
 ==============================================================
 
  
- 
+
 You must build/deploy a Next.js website, that runs on a server using Coolify, with InstantDB for the database/authentication/verification emails. You must create a new private GitHub repository for it. You must read the "WEBSITE" and "NOTES" and "RULES" sections to build/deploy the website/update(s) I need.
 ===== WEBSITE =====
 
@@ -292,16 +292,24 @@ But also, something extremely important, which is that you must make sure that t
 Make sure to use the command "openssl rand -base64 32" to change the default server password and the default Coolify password, and then once you're done, give me those new passwords, and the new server IP, and the new Coolify login URL, and the new Coolify website URL, and the new InstantDB App ID, and the new InstantDB Secret, in the following format:
 
 '''
-Server Address: 
-Server Password: 
+Server Address:
+Server Password:
 
-Coolify URL: 
-Coolify Password: 
+Coolify URL:
+Coolify Admin Email:
+Coolify Password:
+Coolify API Token:
 
-InstantDB App ID: 
-InstantDB Secret: 
+InstantDB App ID:
+InstantDB Secret:
 
-Coolify Website URL: 
+GitHub Repository:
+Deploy Key Location (on server):
+
+Coolify Website URL:
+Application UUID:
+Project UUID:
+Environment UUID:
 '''
 And keep in mind that the website should be built/deployed without a custom domain, because I will manually assign a custom domain after the website is finished being built/deployed.
 Also, make sure the name of the website is the same for InstantDB, Coolify, and the GitHub repo.
@@ -798,14 +806,177 @@ NAME: browserbase
        - "Did I verify the command syntax?"
        - "Did I check the documentation?"
        - "Is there a CLI command I missed?"
-    e) Only proceed to fallback if you can confidently answer:
-       "I have exhausted all CLI options, verified from help output and docs, and this operation is genuinely impossible via command line"
+       e) Only proceed to fallback if you can confidently answer:
+          "I have exhausted all CLI options, verified from help output and docs, and this operation is genuinely impossible via command line"
 
 50. You must run `npm run build` locally BEFORE pushing to GitHub or deploying
 - If build fails, fix ALL errors before proceeding
 - NEVER push code without successful local build
 - This catches: missing dependencies, TypeScript errors, build config issues
 - Workflow: build → commit → push → deploy (in that exact order)
+
+51. Coolify Environment Variables - API Limitations (CRITICAL):
+    a) The Coolify API POST /applications/{uuid}/envs does NOT accept these parameters:
+       - ❌ `is_build_time` (will cause "This field is not allowed" error)
+       - ❌ `is_buildtime` (will cause "This field is not allowed" error)
+       - ❌ `is_runtime` (will cause "This field is not allowed" error)
+    b) The API ONLY accepts these parameters:
+       - ✅ `key` (string, required)
+       - ✅ `value` (string, required)
+       - ✅ `is_preview` (boolean, optional)
+       - ✅ `is_literal` (boolean, optional)
+       - ✅ `is_multiline` (boolean, optional)
+       - ✅ `is_shown_once` (boolean, optional)
+       c) To set build-time environment variables, use this two-step workflow:
+          STEP 1: Create variable via API with basic parameters only:
+       ```bash
+       curl -X POST http://localhost:8000/api/v1/applications/{uuid}/envs \
+         -H "Authorization: Bearer <token>" \
+         -H "Content-Type: application/json" \
+         -d '{"key":"VAR_NAME","value":"<value>"}'
+       ```
+       STEP 2: Update database to set is_buildtime flag:
+       ```bash
+       docker exec coolify php artisan tinker --execute="\
+         \\DB::table('environment_variables')\
+           ->where('uuid', '<env-var-uuid-from-step1-response>')\
+           ->update(['is_buildtime' => true]);\
+         echo 'Updated to build-time';"
+       ```
+    d) After adding ALL environment variables, redeploy the application
+    e) The Coolify CLI `coolify app env create` command also fails because it internally calls the API with unsupported parameters
+    f) Cache this workflow in WARP_AGENT_DOCS/coolify-env-vars-api.md for future reference
+
+52. API Endpoint Research Methodology (CRITICAL):
+    a) BEFORE attempting to use ANY API endpoint for the FIRST time:
+       STEP 1: Use Context7 to fetch documentation for the specific endpoint
+       STEP 2: Use BrightData to scrape the official API docs page
+       STEP 3: Cache the documentation in WARP_AGENT_DOCS/ with a descriptive filename
+       STEP 4: PARSE the documentation to identify:
+              - Required vs optional parameters
+              - Parameter names (exact spelling, case-sensitive)
+              - Parameter types and formats
+              - Known limitations or restrictions
+       STEP 5: Only THEN attempt the API call with the validated parameters
+    b) NEVER assume parameter names based on:
+       - CLI flag names (e.g., --build-time doesn't mean API accepts is_build_time)
+       - Similar API endpoints
+       - Common naming patterns
+       - Logical guesses
+    c) NEVER attempt an API call without first researching the exact endpoint documentation
+    d) If an API call fails with validation errors:
+       - DO NOT try parameter name variations
+       - RE-READ the documentation
+       - Look for alternative methods (database, CLI, etc.)
+
+53. Server Credentials - Respect Existing Values in NOTES:
+    a) ALWAYS read the entire NOTES section for existing credentials BEFORE generating new ones
+    b) Use credentials in this priority order:
+       STEP 1: Explicitly provided credentials in NOTES (e.g., "Server Password: xyz")
+       STEP 2: Credentials from WARP_AGENT_LOG.md previous sessions
+       STEP 3: ONLY generate new credentials if:
+              - User explicitly requests new credentials, OR
+              - Existing credentials fail after 2-3 verified attempts
+    c) When generating new credentials:
+       - Log them immediately in WARP_AGENT_LOG.md
+       - Use the format specified in NOTES section
+       - Document WHY new credentials were generated
+    d) NEVER generate new credentials "just to be safe" - this creates confusion and waste
+
+54. Coolify Admin Password Management:
+    a) The Coolify admin password is set ONCE during installation (Rule 18)
+    b) DO NOT change the admin password unless:
+       - Explicitly instructed by user for security reasons
+       - Login fails after 3+ attempts with installation password AND you've verified typos
+    c) If UI login fails:
+          STEP 1: Verify the password from installation command in WARP_AGENT_LOG.md
+          STEP 2: Check for special characters that may need escaping
+          STEP 3: Try password reset via database ONLY as last resort
+    d) Password reset command (use ONLY when necessary):
+       ```bash
+       docker exec coolify php artisan tinker --execute="\
+         \\$user = \\App\\Models\\User::first();\
+         \\$user->password = \\Hash::make('new-simple-password');\
+         \\$user->save();\
+         echo 'Password reset to: new-simple-password';"
+       ```
+    e) ALWAYS log password changes in WARP_AGENT_LOG.md with timestamp and reason
+
+55. API Parameter Validation Checklist:
+    a) After researching API documentation (Rule 52), create this validation checklist:
+       - [ ] All required parameters identified from docs
+       - [ ] Parameter types verified (string, boolean, integer, array, object)
+       - [ ] Parameter names copied EXACTLY (case-sensitive, no variations)
+       - [ ] Optional parameters and their defaults documented
+       - [ ] Known restrictions or limitations noted
+       - [ ] Unsupported parameters identified (to avoid sending them)
+    b) Test strategy:
+       - Start with ONLY required parameters
+       - Add optional parameters ONE AT A TIME
+       - Never send parameters not listed in documentation
+    c) When API returns validation errors:
+       - Extract the EXACT field name from error message
+       - Check if that field is in the API documentation
+       - If field is NOT in docs: Remove it, find alternative method
+       - If field IS in docs: Verify type and format match exactly
+    d) Document the validated parameter list in WARP_AGENT_DOCS/ for future reference
+
+56. Documentation Caching Strategy:
+    a) For each tool/service, maintain these docs in WARP_AGENT_DOCS/:
+       - {tool}-api-endpoints.md (overview of all endpoints)
+       - {tool}-api-{operation}.md (detailed docs for specific operations)
+       - {tool}-cli-commands.md (help output and command reference)
+       - {tool}-troubleshooting.md (common errors and their solutions)
+    b) At the START of working with ANY tool:
+       - Check WARP_AGENT_DOCS/ for existing cached documentation
+       - Check retrieval timestamp in cached files
+       - Re-fetch if > 30 days old OR if known to be incorrect
+    c) After solving ANY problem:
+       - Update {tool}-troubleshooting.md with:
+         * Error message (exact text)
+         * Root cause
+         * Solution (exact commands/steps)
+         * Prevention tips for future
+         d) This creates institutional knowledge across sessions and projects
+         e) Example cache structure:
+       ```
+       WARP_AGENT_DOCS/
+       ├── coolify-api-endpoints.md
+       ├── coolify-api-create-env-vars.md
+       ├── coolify-api-create-application.md
+       ├── coolify-cli-commands.md
+       ├── coolify-troubleshooting.md
+       ├── instantdb-schema-syntax.md
+       └── instantdb-troubleshooting.md
+       ```
+
+57. Two-Step Workarounds Documentation Pattern:
+    a) When you discover that a tool requires a two-step workaround:
+       - Document the EXACT steps in WARP_AGENT_DOCS/
+       - Explain WHY the workaround is necessary
+       - Include the error message that indicates this workaround is needed
+    b) Format for two-step workaround documentation:
+       ```markdown
+       # {Tool} - {Operation} Workaround
+       
+       ## Problem
+       - API/CLI doesn't support {feature} directly
+       - Error message: "exact error text"
+       
+       ## Root Cause
+       - {explanation of why the direct method doesn't work}
+       
+       ## Solution (Two-Step Workaround)
+       ### Step 1: {Primary Operation}
+       {exact command or API call}
+       
+       ### Step 2: {Database/Config Update}
+       {exact command to complete the operation}
+       
+       ## Verification
+       {how to verify it worked}
+       ```
+    c) This prevents repeatedly discovering the same workarounds across projects
 
 ===== END RULES =====
 
