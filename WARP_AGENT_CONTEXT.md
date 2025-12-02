@@ -457,7 +457,7 @@ NAME: browserbase
 
 3. To ensure maximum security and prevent access to the database even in case of a server breach, all data retrieval, updates, deletes, and inserts must be performed client-side using the InstantDB React SDK. Users should only access their own data via strict InstantDB permissions rules, and no data that does not belong to them. Do not use server components or actions for database operations. Data validation must always be done using zod on the client-side, and any data must have a typescript type (DO NOT use FormData as the type).
 
-4. After you build all the files for the first deployment, use the command "openssl rand -hex 32" to get the result that Coolify requires you to use as the secret, in order to set up auto-deployments triggered by a GitHub webhook, and then deploy without asking for permission.
+4. After you build all the files for the first deployment, deploy without asking for permission. Auto-deployment will be configured via GitHub Actions (see Rule 58).
 5. After you build all the files/if you update any file(s), always use the "start_process" MCP server tool to start the localhost server so that I can test the website, before waiting for my confirmation on whether you must make any further update(s), or to deploy the website. Keep in mind, that after the first deployment, the website auto-deploys once GitHub detects you push the update(s) using the command "git push origin main" (because I manually set up a deployment webhook after the first successful deployment).
 
 6. After you build all the files/if you update any file(s), and once I confirm the deployment, always first check if the WARP.md file exists, because if it doesn't, you must first analyze the entire codebase to create a WARP.md file, which will be given to future instances of Warp to operate in this repository. Make sure it summarizes every single part of the codebase as much as possible without losing a single detail, by organizing each section into a tree-like structure, to show what is where, and why it's there. Make sure to add the title to the file with the following text "WARP.md", and also, the first line should have the following text "This file provides guidance to WARP (warp.dev) when working with code in this repository". But, if the WARP.md file exists, then you must first update the WARP.md file so that it matches the change(s), before deploying them.
@@ -814,6 +814,48 @@ NAME: browserbase
 - NEVER push code without successful local build
 - This catches: missing dependencies, TypeScript errors, build config issues
 - Workflow: build → commit → push → deploy (in that exact order)
+
+58. Coolify Auto-Deployment with GitHub Actions (CRITICAL - DO NOT USE WEBHOOKS):
+    a) ALWAYS use GitHub Actions for auto-deployment with Coolify, NEVER use GitHub webhooks
+    b) Why webhooks don't work:
+       - Coolify's /api/v1/deploy endpoint requires Authorization Bearer header
+       - GitHub webhooks cannot send custom HTTP headers
+       - The manual_webhook_secret_github field exists but authentication always fails (401 Unauthorized)
+       - Direct webhook attempts will waste time and always fail
+    c) GitHub Actions setup (REQUIRED METHOD):
+       STEP 1: Create workflow file `.github/workflows/deploy.yml`:
+       ```yaml
+       name: Deploy to Coolify
+       
+       on:
+         push:
+           branches:
+             - main
+       
+       jobs:
+         deploy:
+           runs-on: ubuntu-latest
+           steps:
+             - name: Trigger Coolify Deployment
+               run: |
+                 curl -X GET "http://<SERVER_IP>:8000/api/v1/deploy?uuid=<APP_UUID>&force=false" \
+                   -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}"
+       ```
+       STEP 2: Add Coolify API token as GitHub secret:
+       ```bash
+       gh secret set COOLIFY_API_TOKEN --body '<API_TOKEN>' --repo <owner>/<repo>
+       ```
+       STEP 3: Commit and push workflow file to trigger first deployment
+    d) Verification:
+       - Check GitHub Actions tab: workflow should run successfully
+       - Check Coolify: new deployment should be queued/in progress
+       - Test: Push any commit to main branch → auto-deployment should trigger
+    e) DO NOT attempt these methods (they will fail):
+       - GitHub webhook with secret in URL parameter
+       - GitHub webhook with secret in config
+       - Direct POST to /api/v1/deploy without Authorization header
+       - Any webhook-based approach
+    f) This is the ONLY reliable method for Coolify auto-deployment with GitHub
 
 51. Coolify Environment Variables - API Limitations (CRITICAL):
     a) The Coolify API POST /applications/{uuid}/envs does NOT accept these parameters:
