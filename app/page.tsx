@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -16,19 +17,19 @@ export default function LandingPage() {
     <div className="min-h-screen gradient-bg bg-pattern flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
       <div className="max-w-6xl mx-auto w-full">
         <div className="text-center space-y-8 animate-fade-in">
-          {/* Globe Icon */}
+          {/* Logo */}
           <div className="flex justify-center">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-navy-800/50 border-2 border-cyan-400/30 flex items-center justify-center shadow-cyan-glow">
-              <svg className="w-12 h-12 sm:w-14 sm:h-14 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+            <div className="relative w-full max-w-2xl mx-auto px-4">
+              <Image
+                src="/hand2hand-logo.png"
+                alt="Hand 2 Hand Logo"
+                width={800}
+                height={400}
+                className="w-full h-auto drop-shadow-2xl"
+                priority
+              />
             </div>
           </div>
-          
-          {/* Logo/Title */}
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-cyan-300 to-cyan-400">
-            Hand 2 Hand
-          </h1>
           
           {/* Subtitle */}
           <p className="text-xl sm:text-2xl text-slate-300 font-medium max-w-3xl mx-auto">
