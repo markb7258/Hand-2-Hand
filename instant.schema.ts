@@ -18,6 +18,10 @@ const _schema = i.schema({
       population: i.string(),
       groups: i.number(),
       photoUrl: i.string().optional(),
+      countryDetails: i.string().optional(),
+      primaryContacts: i.string().optional(),
+      adminNotes: i.string().optional(),
+      flag: i.string().optional(),
     }),
     // User notes for each country
     notes: i.entity({

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { COUNTRIES } from '@/lib/countries';
 import { logoutUser } from '@/app/actions/auth';
+import { db } from '@/lib/instant';
 
 interface DashboardClientProps {
   user: {
@@ -24,6 +25,15 @@ export default function DashboardClient({ user, isAdmin }: DashboardClientProps)
     router.push('/');
   };
 
+  // Fetch DB countries to include admin-added ones
+  const { data } = db.useQuery({ countries: {} });
+  const dbCountries = data?.countries || [];
+  // Merge static + DB, unique by slug (prefer DB for name/flag overrides)
+  const map = new Map<string, any>();
+  for (const c of COUNTRIES) map.set(c.slug, c);
+  for (const c of dbCountries) map.set(c.slug, { ...map.get(c.slug), ...c });
+  const merged = Array.from(map.values());
+
   return (
     <div className="min-h-screen gradient-bg bg-pattern">
       {/* Header */}
@@ -31,14 +41,19 @@ export default function DashboardClient({ user, isAdmin }: DashboardClientProps)
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
             <h1 className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300 text-center sm:text-left">
-              Hand-to-Hand
+              Hand 2 Hand
             </h1>
             <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
               <span className="text-xs sm:text-sm text-slate-300 truncate max-w-full px-2 sm:px-0">{user.email}</span>
               <div className="flex gap-2 w-full sm:w-auto">
                 {isAdmin && (
-                  <Button asChild variant="default" size="sm" className="flex-1 sm:flex-none gradient-accent text-navy-900 font-semibold hover:shadow-cyan-glow">
-                    <Link href="/admin">Admin Panel</Link>
+                  <Button
+                    onClick={() => router.push('/admin')}
+                    variant="default"
+                    size="sm"
+                    className="flex-1 sm:flex-none gradient-accent text-navy-900 font-semibold hover:shadow-cyan-glow"
+                  >
+                    Admin Panel
                   </Button>
                 )}
                 <Button
@@ -64,7 +79,7 @@ export default function DashboardClient({ user, isAdmin }: DashboardClientProps)
 
         {/* Country Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {COUNTRIES.map((country) => (
+          {merged.map((country) => (
             <Link
               key={country.slug}
               href={`/dashboard/${country.slug}`}
@@ -72,7 +87,7 @@ export default function DashboardClient({ user, isAdmin }: DashboardClientProps)
             >
               <Card className="group hover:shadow-cyan-glow transition-all duration-300 p-6 flex flex-col items-center justify-center space-y-3 hover:-translate-y-1 touch-manipulation min-h-[160px] sm:min-h-[180px] border-cyan-400/20 glass-card">
                 <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-cyan-500 to-cyan-400 rounded-full flex items-center justify-center text-4xl sm:text-5xl shadow-cyan-glow border-2 border-cyan-300">
-                  {country.flag}
+                  {country.flag || '🏳️'}
                 </div>
                 <h3 className="text-lg sm:text-xl font-semibold text-slate-100 text-center px-2">
                   {country.name}

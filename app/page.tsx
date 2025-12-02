@@ -27,12 +27,12 @@ export default function LandingPage() {
           
           {/* Logo/Title */}
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-cyan-300 to-cyan-400">
-            Hand-to-Hand
+            Hand 2 Hand
           </h1>
           
           {/* Subtitle */}
           <p className="text-xl sm:text-2xl text-slate-300 font-medium max-w-3xl mx-auto">
-            Mission Management Across Latin America
+            Mission Management Across the Americas
           </p>
           
           {/* Feature Cards */}
@@ -46,10 +46,10 @@ export default function LandingPage() {
                   </svg>
                 </div>
                 <h3 className="text-xl font-semibold text-cyan-400">
-                  18 Countries
+                  21 Countries
                 </h3>
                 <p className="text-slate-400 text-sm">
-                  Comprehensive coverage of Latin America
+                  Comprehensive coverage across the Americas
                 </p>
               </CardContent>
             </Card>

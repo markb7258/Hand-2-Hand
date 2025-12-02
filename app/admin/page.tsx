@@ -9,6 +9,7 @@ import { id } from '@instantdb/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -59,7 +60,7 @@ export default function AdminPanel() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
             <Link href="/dashboard" className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300 text-center sm:text-left touch-manipulation hover:scale-105 transition-transform duration-300">
-              ← Hand-to-Hand
+              ← Hand 2 Hand
             </Link>
             <h1 className="text-2xl sm:text-3xl font-bold text-cyan-400 text-center sm:text-left">Admin Panel</h1>
             <Button
@@ -155,12 +156,27 @@ function CountriesTab({ countries }: { countries: any[] }) {
   const [population, setPopulation] = useState('');
   const [groups, setGroups] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
+  const [countryDetails, setCountryDetails] = useState('');
+  const [primaryContacts, setPrimaryContacts] = useState('');
+  const [adminNotes, setAdminNotes] = useState('');
+  const [flag, setFlag] = useState('');
+
+  // New country form
+  const [newName, setNewName] = useState('');
+  const [newSlug, setNewSlug] = useState('');
+  const [newPopulation, setNewPopulation] = useState('');
+  const [newGroups, setNewGroups] = useState('12');
+  const [newFlag, setNewFlag] = useState('');
 
   const handleEditCountry = (country: any) => {
     setEditingCountry(country.id);
-    setPopulation(country.population);
-    setGroups(country.groups.toString());
+    setPopulation(country.population || '');
+    setGroups(country.groups?.toString?.() || '');
     setPhotoUrl(country.photoUrl || '');
+    setCountryDetails(country.countryDetails || '');
+    setPrimaryContacts(country.primaryContacts || '');
+    setAdminNotes(country.adminNotes || '');
+    setFlag(country.flag || '');
   };
 
   const handleSaveCountry = async (countryId: string) => {
@@ -170,6 +186,10 @@ function CountriesTab({ countries }: { countries: any[] }) {
           population,
           groups: parseInt(groups),
           photoUrl: photoUrl || undefined,
+          countryDetails: countryDetails || undefined,
+          primaryContacts: primaryContacts || undefined,
+          adminNotes: adminNotes || undefined,
+          flag: flag || undefined,
         })
       );
       setEditingCountry(null);
@@ -180,11 +200,43 @@ function CountriesTab({ countries }: { countries: any[] }) {
     }
   };
 
+  const handleCreateCountry = async () => {
+    try {
+      if (!newName || !newSlug) {
+        alert('Name and slug are required');
+        return;
+      }
+      const id = crypto.randomUUID();
+      await db.transact(
+        db.tx.countries[id].update({
+          name: newName,
+          slug: newSlug,
+          population: newPopulation || '0',
+          groups: parseInt(newGroups) || 12,
+          photoUrl: undefined,
+          flag: newFlag || undefined,
+        })
+      );
+      setNewName('');
+      setNewSlug('');
+      setNewPopulation('');
+      setNewGroups('12');
+      setNewFlag('');
+      alert('Country created');
+    } catch (err) {
+      console.error('Error creating country:', err);
+      alert('Error creating country');
+    }
+  };
+
   // Get all countries including those not yet in DB
   const allCountries = COUNTRIES.map(c => {
     const existing = countries.find(country => country.slug === c.slug);
     return existing || { ...c, groups: 12, photoUrl: '', id: null };
   });
+  // Also include DB-only countries that are not in static list
+  const dbOnly = countries.filter(c => !COUNTRIES.some(sc => sc.slug === c.slug));
+  const mergedCountries = [...allCountries, ...dbOnly];
 
   return (
     <Card className="border-cyan-400/20/50 glass-card backdrop-blur-sm">
@@ -192,47 +244,103 @@ function CountriesTab({ countries }: { countries: any[] }) {
         <CardTitle className="text-2xl sm:text-3xl">Manage Countries</CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Add new country */}
+        <div className="p-4 sm:p-6 mb-6 rounded-xl border-2 border-cyan-400/30 bg-white/40">
+          <h3 className="text-lg sm:text-xl font-semibold text-slate-100 mb-4">Add New Country</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="new-name">Name</Label>
+              <Input id="new-name" value={newName} onChange={(e) => setNewName(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="new-slug">Slug</Label>
+              <Input id="new-slug" value={newSlug} onChange={(e) => setNewSlug(e.target.value)} placeholder="e.g. united-states" />
+            </div>
+            <div>
+              <Label htmlFor="new-pop">Population</Label>
+              <Input id="new-pop" value={newPopulation} onChange={(e) => setNewPopulation(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="new-groups">Groups</Label>
+              <Input id="new-groups" type="number" value={newGroups} onChange={(e) => setNewGroups(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="new-flag">Flag Emoji</Label>
+              <Input id="new-flag" value={newFlag} onChange={(e) => setNewFlag(e.target.value)} placeholder="🇺🇸" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <Button onClick={handleCreateCountry} className="gradient-accent text-white">Create Country</Button>
+          </div>
+        </div>
+
         <div className="space-y-4 sm:space-y-6">
-          {allCountries.map((country) => (
+          {mergedCountries.map((country) => (
             <div key={country.slug} className="p-4 sm:p-6 bg-white/50 backdrop-blur-sm rounded-xl border-2 border-cyan-400/20/20 hover:border-cyan-400/20/40 transition-all duration-300">
               {editingCountry === country.id ? (
                 <div className="space-y-3 sm:space-y-4">
                   <h3 className="text-lg sm:text-xl font-semibold text-slate-100 mb-3 sm:mb-4">{country.name}</h3>
-                  <div className="space-y-2">
-                    <Label htmlFor={`pop-${country.slug}`}>Population</Label>
-                    <Input
-                      id={`pop-${country.slug}`}
-                      type="text"
-                      value={population}
-                      onChange={(e) => setPopulation(e.target.value)}
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor={`pop-${country.slug}`}>Population</Label>
+                      <Input
+                        id={`pop-${country.slug}`}
+                        type="text"
+                        value={population}
+                        onChange={(e) => setPopulation(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`groups-${country.slug}`}>Number of Groups</Label>
+                      <Input
+                        id={`groups-${country.slug}`}
+                        type="number"
+                        value={groups}
+                        onChange={(e) => setGroups(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`photo-${country.slug}`}>Photo URL</Label>
+                      <Input
+                        id={`photo-${country.slug}`}
+                        type="text"
+                        value={photoUrl}
+                        onChange={(e) => setPhotoUrl(e.target.value)}
+                        placeholder="https://example.com/photo.jpg"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`flag-${country.slug}`}>Flag (emoji)</Label>
+                      <Input
+                        id={`flag-${country.slug}`}
+                        type="text"
+                        value={flag}
+                        onChange={(e) => setFlag(e.target.value)}
+                        placeholder="🇺🇸"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor={`groups-${country.slug}`}>Number of Groups</Label>
-                    <Input
-                      id={`groups-${country.slug}`}
-                      type="number"
-                      value={groups}
-                      onChange={(e) => setGroups(e.target.value)}
-                    />
+                    <Label htmlFor={`details-${country.slug}`}>Country Details</Label>
+                    <Textarea id={`details-${country.slug}`} value={countryDetails} onChange={(e) => setCountryDetails(e.target.value)} className="min-h-[120px] bg-white/90" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor={`photo-${country.slug}`}>Photo URL</Label>
-                    <Input
-                      id={`photo-${country.slug}`}
-                      type="text"
-                      value={photoUrl}
-                      onChange={(e) => setPhotoUrl(e.target.value)}
-                      placeholder="https://example.com/photo.jpg"
-                    />
+                    <Label htmlFor={`contacts-${country.slug}`}>Primary Contacts</Label>
+                    <Textarea id={`contacts-${country.slug}`} value={primaryContacts} onChange={(e) => setPrimaryContacts(e.target.value)} className="min-h-[120px] bg-white/90" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`notes-${country.slug}`}>Admin Notes</Label>
+                    <Textarea id={`notes-${country.slug}`} value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} className="min-h-[120px] bg-white/90" />
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <Button
-                      onClick={() => handleSaveCountry(country.id)}
-                      className="gradient-accent text-white"
-                    >
-                      Save
-                    </Button>
+                    {country.id ? (
+                      <Button
+                        onClick={() => handleSaveCountry(country.id)}
+                        className="gradient-accent text-white"
+                      >
+                        Save
+                      </Button>
+                    ) : null}
                     <Button
                       onClick={() => setEditingCountry(null)}
                       variant="outline"
@@ -243,22 +351,50 @@ function CountriesTab({ countries }: { countries: any[] }) {
                 </div>
               ) : (
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div className="flex-1">
-                    <h3 className="text-lg sm:text-xl font-semibold text-slate-100">{country.name}</h3>
-                    <div className="mt-2 space-y-1 text-xs sm:text-sm text-slate-300">
-                      <div>Population: <span className="font-bold break-all">{country.population}</span></div>
-                      <div>Groups: <span className="font-bold">{country.groups}</span></div>
-                      <div>Photo: <span className="font-bold">{country.photoUrl ? 'Set' : 'Not set'}</span></div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-400 flex items-center justify-center text-2xl border-2 border-cyan-300">
+                      {country.flag || '🏳️'}
+                    </div>
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-semibold text-slate-100">{country.name}</h3>
+                      <div className="mt-1 space-y-1 text-xs sm:text-sm text-slate-300">
+                        <div>Population: <span className="font-bold break-all">{country.population}</span></div>
+                        <div>Groups: <span className="font-bold">{country.groups}</span></div>
+                        <div>Photo: <span className="font-bold">{country.photoUrl ? 'Set' : 'Not set'}</span></div>
+                      </div>
                     </div>
                   </div>
-                  {country.id && (
-                    <Button
-                      onClick={() => handleEditCountry(country)}
-                      className="w-full sm:w-auto gradient-accent text-white"
-                    >
-                      Edit
-                    </Button>
-                  )}
+                  <div className="flex gap-2">
+                    {country.id ? (
+                      <Button
+                        onClick={() => handleEditCountry(country)}
+                        className="w-full sm:w-auto gradient-accent text-white"
+                      >
+                        Edit
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={async () => {
+                          // Create DB record for a static-only country
+                          const newId = crypto.randomUUID();
+                          await db.transact(
+                            db.tx.countries[newId].update({
+                              name: country.name,
+                              slug: country.slug,
+                              population: country.population,
+                              groups: country.groups || 12,
+                              photoUrl: country.photoUrl || undefined,
+                              flag: country.flag || undefined,
+                            })
+                          );
+                          alert('Country record created. You can now edit it.');
+                        }}
+                        className="w-full sm:w-auto gradient-accent text-white"
+                      >
+                        Create
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

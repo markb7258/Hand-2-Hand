@@ -18,6 +18,9 @@ export const COUNTRIES = [
   { name: 'Peru', slug: 'peru', population: '34,352,719', flag: '🇵🇪' },
   { name: 'Uruguay', slug: 'uruguay', population: '3,423,108', flag: '🇺🇾' },
   { name: 'Venezuela', slug: 'venezuela', population: '28,838,499', flag: '🇻🇪' },
+  { name: 'United States', slug: 'united-states', population: '331,900,000', flag: '🇺🇸' },
+  { name: 'Canada', slug: 'canada', population: '39,742,430', flag: '🇨🇦' },
+  { name: 'Brazil', slug: 'brazil', population: '215,313,498', flag: '🇧🇷' },
 ] as const;
 
 export const DEFAULT_GROUPS = 12;
