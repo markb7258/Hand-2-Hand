@@ -14,11 +14,11 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 - **UI Components:** Shadcn UI (New York style, Slate base)
 - **Styling:** Tailwind CSS with custom dark navy theme
 - **Validation:** Zod
-- **Deployment:** Coolify (server: 178.156.197.214)
+- **Deployment:** Coolify (server: 196.251.100.142)
 
 ### InstantDB Credentials
-- **App ID:** fd93719b-b44d-4edf-a070-819097ba20a3
-- **Secret:** db4b4adc-6730-4a81-9ec8-8da0b4699775
+- **App ID:** 7b67f3b1-46b2-4724-a83d-ae3f6a47b087
+- **Secret:** d7219b1a-f32f-4c0e-92af-e117bde71da5
 
 ---
 
@@ -1182,13 +1182,13 @@ git push origin main
 
 ## Contact & Support
 
-- **Repository:** https://github.com/markb7258/nicks-website
+- **Repository:** https://github.com/markb7258/erics-website
 - **InstantDB Docs:** https://www.instantdb.com/docs
 - **Next.js Docs:** https://nextjs.org/docs
 - **Tailwind CSS Docs:** https://tailwindcss.com/docs
 
 ---
 
-**Last Updated:** October 21, 2025  
-**Version:** 1.0.0  
+**Last Updated:** December 2, 2025  
+**Version:** 1.1.0  
 **Maintained by:** WARP AI Agent
