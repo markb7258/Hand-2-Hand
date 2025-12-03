@@ -1182,7 +1182,7 @@ git push origin main
 
 ## Contact & Support
 
-- **Repository:** https://github.com/markb7258/erics-website
+- **Repository:** https://github.com/markb7258/Hand-2-Hand
 - **InstantDB Docs:** https://www.instantdb.com/docs
 - **Next.js Docs:** https://nextjs.org/docs
 - **Tailwind CSS Docs:** https://tailwindcss.com/docs

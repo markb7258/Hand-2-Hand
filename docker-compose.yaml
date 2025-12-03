@@ -45,9 +45,9 @@ services:
             - coolify.applicationId=1
             - coolify.type=application
             - coolify.name=xgc0gk0socw4cgs8k88gkg84
-            - coolify.resourceName=erics-website
-            - coolify.projectName=erics-website
-            - coolify.serviceName=erics-website
+            - coolify.resourceName=Hand-2-Hand
+            - coolify.projectName=Hand-2-Hand
+            - coolify.serviceName=Hand-2-Hand
             - coolify.environmentName=production
             - coolify.pullRequestId=0
 networks:
