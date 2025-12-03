@@ -30,13 +30,12 @@ export default function LandingPage() {
           <div className="flex justify-center">
             <div className="relative w-full max-w-2xl mx-auto px-4">
               <Image
-                src="https://store-na-phx-2.gofile.io/download/direct/8836681a-69e9-4294-908d-7ce650beeb30/H2H21st%20logo.png"
+                src="/hand2hand-logo.png"
                 alt="Hand 2 Hand Logo"
                 width={800}
                 height={400}
                 className="w-full h-auto drop-shadow-2xl"
                 priority
-                unoptimized
               />
             </div>
           </div>
