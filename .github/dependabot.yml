@@ -1,0 +1,57 @@
+# Dependabot Configuration for Hand-2-Hand
+# This file configures automatic dependency updates for NPM packages and GitHub Actions
+# Updates are checked daily at 10:00 AM UTC
+
+version: 2
+updates:
+  # NPM Dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "10:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "npm"
+      - "automated"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    reviewers:
+      - "markb7258"
+    assignees:
+      - "markb7258"
+    # Group minor and patch updates together for efficiency
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+      development-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "10:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "automated"
+    commit-message:
+      prefix: "chore(actions)"
+      include: "scope"
+    reviewers:
+      - "markb7258"
+    assignees:
+      - "markb7258"

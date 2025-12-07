@@ -1,0 +1,94 @@
+name: Weekly Server Updates
+
+# This workflow performs weekly server maintenance:
+# - Updates OS packages
+# - Updates Docker images
+# - Updates Coolify CLI
+# - Redeploys the application
+# Only runs if all Dependabot PRs are merged (dependency safety check)
+
+on:
+  schedule:
+    # Every Monday at 10:00 AM UTC
+    - cron: '0 10 * * 1'
+  workflow_dispatch:  # Allow manual trigger
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  check-dependencies:
+    runs-on: ubuntu-latest
+    outputs:
+      can-proceed: ${{ steps.check.outputs.can-proceed }}
+    steps:
+      - name: Check for open Dependabot PRs
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get count of open Dependabot PRs
+          OPEN_PRS=$(gh pr list --repo ${{ github.repository }} --author "dependabot[bot]" --state open --json number --jq 'length')
+          
+          echo "Open Dependabot PRs: $OPEN_PRS"
+          
+          if [ "$OPEN_PRS" -eq 0 ]; then
+            echo "can-proceed=true" >> $GITHUB_OUTPUT
+            echo "✅ No open Dependabot PRs - safe to proceed with server updates"
+          else
+            echo "can-proceed=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Found $OPEN_PRS open Dependabot PRs - skipping server updates for safety"
+            echo "Please merge or close all Dependabot PRs before running server updates."
+          fi
+
+  server-maintenance:
+    runs-on: ubuntu-latest
+    needs: check-dependencies
+    if: needs.check-dependencies.outputs.can-proceed == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 196.251.100.142 >> ~/.ssh/known_hosts
+
+      - name: Copy maintenance script to server
+        run: |
+          scp -i ~/.ssh/id_rsa scripts/server-auto-update.sh root@196.251.100.142:/tmp/
+          ssh -i ~/.ssh/id_rsa root@196.251.100.142 'chmod +x /tmp/server-auto-update.sh'
+
+      - name: Run server maintenance
+        env:
+          COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
+        run: |
+          ssh -i ~/.ssh/id_rsa root@196.251.100.142 \
+            "APP_UUID=dw4040kw4ok440w48o4k4880 \
+             COOLIFY_URL=http://localhost:8000 \
+             COOLIFY_API_TOKEN=$COOLIFY_API_TOKEN \
+             /tmp/server-auto-update.sh"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          ssh -i ~/.ssh/id_rsa root@196.251.100.142 'rm -f /tmp/server-auto-update.sh' || true
+          rm -f ~/.ssh/id_rsa
+
+      - name: Notify completion
+        if: success()
+        run: |
+          echo "✅ Server maintenance completed successfully"
+          echo "- OS packages updated"
+          echo "- Docker images updated"
+          echo "- Coolify CLI updated"
+          echo "- Application redeployed"
+
+      - name: Notify failure
+        if: failure()
+        run: |
+          echo "❌ Server maintenance failed"
+          echo "Please check the logs and investigate the issue."
