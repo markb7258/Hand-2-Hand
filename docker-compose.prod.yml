@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - DATABASE_URL=postgresql://hand_2_hand_user:H83QSpciBlQ3YFfysThJz5HAeXgGVJ8L@db:5432/hand_2_hand_db
     restart: unless-stopped
     ports:
       - "3000:3000"
