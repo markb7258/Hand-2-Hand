@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
     // Fetch all profiles
     const allProfiles = await prisma.profile.findMany();
     
-    const profilesWithEmail = allProfiles.map((profile) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const profilesWithEmail = allProfiles.map((profile: any) => ({
       id: profile.id,
       userId: profile.userId,
       email: profile.email || 'Unknown',
