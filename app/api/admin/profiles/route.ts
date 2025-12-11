@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyToken } from '@/lib/auth';
+import { Profile } from '@prisma/client';
 
 // GET all profiles with admin check
 export async function GET(request: NextRequest) {
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
     // Fetch all profiles
     const allProfiles = await prisma.profile.findMany();
     
-    const profilesWithEmail = allProfiles.map((profile) => ({
+    const profilesWithEmail = allProfiles.map((profile: Profile) => ({
       id: profile.id,
       userId: profile.userId,
       email: profile.email || 'Unknown',
