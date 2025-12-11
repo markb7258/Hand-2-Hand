@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
       },
       create: {
         userId: userId || user.userId,
+        email: user.email,
         displayName,
         isAdmin: adminFlag
       }

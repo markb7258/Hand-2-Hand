@@ -21,6 +21,7 @@ async function importData() {
         create: {
           id: profile.id,
           userId: profile.id, // In InstantDB, the profile id IS the user id
+          email: `unknown-${profile.id}@placeholder.local`, // Placeholder email
           displayName: profile.displayName || null,
           isAdmin: profile.isAdmin || false,
         }

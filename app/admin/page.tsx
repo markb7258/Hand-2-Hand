@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { db } from '@/lib/instant';
 import { COUNTRIES } from '@/lib/countries';
-import { id } from '@instantdb/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,51 +14,112 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+interface Profile {
+  id: string;
+  instantUserId: string;
+  email: string;
+  isAdmin: boolean;
+}
+
+interface Country {
+  id?: string;
+  name: string;
+  slug: string;
+  population: string;
+  groups: number;
+  photoUrl?: string;
+  flag?: string;
+  countryDetails?: string;
+  primaryContacts?: string;
+  adminNotes?: string;
+}
+interface GalleryImage {
+  id: string;
+  countrySlug: string;
+  imageUrl: string;
+  order: number;
+}
+
+// Helper function to get auth token from cookie
+function getAuthToken(): string | null {
+  if (typeof document === 'undefined') return null;
+  const cookie = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('auth-token='));
+  return cookie ? cookie.split('=')[1] : null;
+}
+
 export default function AdminPanel() {
   const router = useRouter();
   const { isLoading: authLoading, user } = db.useAuth();
   const [activeTab, setActiveTab] = useState<'users' | 'countries' | 'gallery'>('users');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+  
+  // State for data
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
 
-  // Query all data and user's profile
-  const { isLoading, data } = db.useQuery(
-    user ? {
-      profiles: {
-        $: { where: { user: user.id } }
-      },
-      allProfiles: {
-        user: {} // Include linked $user to get email
-      },
-      countries: {},
-      galleryImages: {},
-    } : {
-      allProfiles: {
-        user: {}
-      },
-      countries: {},
-      galleryImages: {},
-    }
-  );
-
-  const userProfile = data?.profiles?.[0];
-
-  // Check if user is admin
+  // Fetch all data on mount
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/');
       return;
     }
 
-    if (user && data) {
-      if (userProfile?.isAdmin) {
-        setIsAdmin(true);
-      } else {
-        router.push('/dashboard');
-      }
+    if (user) {
+      fetchData();
     }
-  }, [authLoading, user, data, userProfile, router]);
+  }, [authLoading, user, router]);
 
-  if (authLoading || isLoading || !user || !isAdmin) {
+  const fetchData = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        router.push('/');
+        return;
+      }
+      // Fetch profiles (will check admin status)
+      const profilesRes = await fetch('/api/admin/profiles', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      if (profilesRes.status === 403) {
+        // Not admin
+        router.push('/dashboard');
+        return;
+      }
+      
+      if (!profilesRes.ok) {
+        throw new Error('Failed to fetch profiles');
+      }
+      
+      const profilesData = await profilesRes.json();
+      setProfiles(profilesData.profiles);
+      setIsAdmin(true);
+
+      // Fetch countries
+      const countriesRes = await fetch('/api/countries');
+      if (countriesRes.ok) {
+        const countriesData = await countriesRes.json();
+        setCountries(countriesData.countries);
+      }
+
+      // Fetch gallery images
+      const galleryRes = await fetch('/api/gallery');
+      if (galleryRes.ok) {
+        const galleryData = await galleryRes.json();
+        setGalleryImages(galleryData.images);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setLoading(false);
+    }
+  };
+
+  if (authLoading || loading || !user || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center gradient-bg bg-pattern">
         <div className="text-lg text-slate-300 animate-pulse">Loading...</div>
@@ -70,7 +130,7 @@ export default function AdminPanel() {
   return (
     <div className="min-h-screen gradient-bg bg-pattern">
       {/* Header */}
-      <header className="glass-morphism shadow-md sticky top-0 z-10 border-b border-cyan-400/20/50">
+      <header className="glass-morphism shadow-md sticky top-0 z-10 border-b border-cyan-400/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
             <Link href="/dashboard" className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300 text-center sm:text-left touch-manipulation hover:scale-105 transition-transform duration-300">
@@ -99,30 +159,44 @@ export default function AdminPanel() {
           </TabsList>
 
           <TabsContent value="users">
-            <UsersTab profiles={data?.allProfiles || []} />
+            <UsersTab profiles={profiles} onUpdate={fetchData} />
           </TabsContent>
           <TabsContent value="countries">
-            <CountriesTab countries={data?.countries || []} />
+            <CountriesTab countries={countries} onUpdate={fetchData} />
           </TabsContent>
           <TabsContent value="gallery">
-            <GalleryTab galleryImages={data?.galleryImages || []} />
+            <GalleryTab galleryImages={galleryImages} onUpdate={fetchData} />
           </TabsContent>
         </Tabs>
       </main>
     </div>
   );
 }
-
 // Users Tab Component
-function UsersTab({ profiles }: { profiles: any[] }) {
+function UsersTab({ profiles, onUpdate }: { profiles: Profile[]; onUpdate: () => void }) {
   const handlePromoteUser = async (profileId: string, currentStatus: boolean) => {
     try {
-      await db.transact(
-        db.tx.profiles[profileId].update({
+      const token = getAuthToken();
+      if (!token) return;
+
+      const res = await fetch('/api/admin/profiles', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          profileId,
           isAdmin: !currentStatus,
-        })
-      );
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to update user status');
+      }
+
       alert('User status updated successfully!');
+      onUpdate();
     } catch (err) {
       console.error('Error updating user:', err);
       alert('Error updating user status');
@@ -130,16 +204,16 @@ function UsersTab({ profiles }: { profiles: any[] }) {
   };
 
   return (
-    <Card className="border-cyan-400/20/50 glass-card backdrop-blur-sm">
+    <Card className="border-cyan-400/20 glass-card backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="text-2xl sm:text-3xl">Manage Users</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3 sm:space-y-4">
           {profiles.map((profile) => (
-            <div key={profile.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-white/50 backdrop-blur-sm rounded-xl border-2 border-cyan-400/20/20 hover:border-cyan-400/20/40 transition-all duration-300">
+            <div key={profile.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-white/50 backdrop-blur-sm rounded-xl border-2 border-cyan-400/20 hover:border-cyan-400/40 transition-all duration-300">
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-slate-100 truncate text-sm sm:text-base">{profile.user?.email || 'No email'}</div>
+                <div className="font-semibold text-slate-100 truncate text-sm sm:text-base">{profile.email}</div>
                 <div className="text-xs sm:text-sm mt-1">
                   {profile.isAdmin ? (
                     <Badge className="bg-primary text-white">Admin</Badge>
@@ -163,9 +237,8 @@ function UsersTab({ profiles }: { profiles: any[] }) {
     </Card>
   );
 }
-
 // Countries Tab Component
-function CountriesTab({ countries }: { countries: any[] }) {
+function CountriesTab({ countries, onUpdate }: { countries: Country[]; onUpdate: () => void }) {
   const [editingCountry, setEditingCountry] = useState<string | null>(null);
   const [population, setPopulation] = useState('');
   const [groups, setGroups] = useState('');
@@ -175,15 +248,8 @@ function CountriesTab({ countries }: { countries: any[] }) {
   const [adminNotes, setAdminNotes] = useState('');
   const [flag, setFlag] = useState('');
 
-  // New country form
-  const [newName, setNewName] = useState('');
-  const [newSlug, setNewSlug] = useState('');
-  const [newPopulation, setNewPopulation] = useState('');
-  const [newGroups, setNewGroups] = useState('12');
-  const [newFlag, setNewFlag] = useState('');
-
-  const handleEditCountry = (country: any) => {
-    setEditingCountry(country.id);
+  const handleEditCountry = (country: Country) => {
+    setEditingCountry(country.id || null);
     setPopulation(country.population || '');
     setGroups(country.groups?.toString?.() || '');
     setPhotoUrl(country.photoUrl || '');
@@ -195,102 +261,57 @@ function CountriesTab({ countries }: { countries: any[] }) {
 
   const handleSaveCountry = async (countryId: string) => {
     try {
-      await db.transact(
-        db.tx.countries[countryId].update({
+      const token = getAuthToken();
+      if (!token) return;
+
+      const res = await fetch('/api/admin/countries', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          countryId,
           population,
           groups: parseInt(groups),
-          photoUrl: photoUrl || undefined,
-          countryDetails: countryDetails || undefined,
-          primaryContacts: primaryContacts || undefined,
-          adminNotes: adminNotes || undefined,
-          flag: flag || undefined,
-        })
-      );
+          photoUrl: photoUrl || null,
+          countryDetails: countryDetails || null,
+          primaryContacts: primaryContacts || null,
+          adminNotes: adminNotes || null,
+          flag: flag || null,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to update country');
+      }
+
       setEditingCountry(null);
       alert('Country data updated successfully!');
+      onUpdate();
     } catch (err) {
       console.error('Error updating country:', err);
       alert('Error updating country data');
     }
   };
 
-  const handleCreateCountry = async () => {
-    try {
-      if (!newName || !newSlug) {
-        alert('Name and slug are required');
-        return;
-      }
-      const id = crypto.randomUUID();
-      await db.transact(
-        db.tx.countries[id].update({
-          name: newName,
-          slug: newSlug,
-          population: newPopulation || '0',
-          groups: parseInt(newGroups) || 12,
-          photoUrl: undefined,
-          flag: newFlag || undefined,
-        })
-      );
-      setNewName('');
-      setNewSlug('');
-      setNewPopulation('');
-      setNewGroups('12');
-      setNewFlag('');
-      alert('Country created');
-    } catch (err) {
-      console.error('Error creating country:', err);
-      alert('Error creating country');
-    }
-  };
-
-  // Get all countries including those not yet in DB
+  // Merge static countries with database countries
   const allCountries = COUNTRIES.map(c => {
     const existing = countries.find(country => country.slug === c.slug);
-    return existing || { ...c, groups: 12, photoUrl: '', id: null };
+    return existing || { ...c, groups: 12, photoUrl: '', id: undefined };
   });
-  // Also include DB-only countries that are not in static list
   const dbOnly = countries.filter(c => !COUNTRIES.some(sc => sc.slug === c.slug));
   const mergedCountries = [...allCountries, ...dbOnly];
 
   return (
-    <Card className="border-cyan-400/20/50 glass-card backdrop-blur-sm">
+    <Card className="border-cyan-400/20 glass-card backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="text-2xl sm:text-3xl">Manage Countries</CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Add new country */}
-        <div className="p-4 sm:p-6 mb-6 rounded-xl border-2 border-cyan-400/30 bg-white/40">
-          <h3 className="text-lg sm:text-xl font-semibold text-slate-100 mb-4">Add New Country</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="new-name">Name</Label>
-              <Input id="new-name" value={newName} onChange={(e) => setNewName(e.target.value)} />
-            </div>
-            <div>
-              <Label htmlFor="new-slug">Slug</Label>
-              <Input id="new-slug" value={newSlug} onChange={(e) => setNewSlug(e.target.value)} placeholder="e.g. united-states" />
-            </div>
-            <div>
-              <Label htmlFor="new-pop">Population</Label>
-              <Input id="new-pop" value={newPopulation} onChange={(e) => setNewPopulation(e.target.value)} />
-            </div>
-            <div>
-              <Label htmlFor="new-groups">Groups</Label>
-              <Input id="new-groups" type="number" value={newGroups} onChange={(e) => setNewGroups(e.target.value)} />
-            </div>
-            <div>
-              <Label htmlFor="new-flag">Flag Emoji</Label>
-              <Input id="new-flag" value={newFlag} onChange={(e) => setNewFlag(e.target.value)} placeholder="🇺🇸" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <Button onClick={handleCreateCountry} className="gradient-accent text-white">Create Country</Button>
-          </div>
-        </div>
-
         <div className="space-y-4 sm:space-y-6">
           {mergedCountries.map((country) => (
-            <div key={country.slug} className="p-4 sm:p-6 bg-white/50 backdrop-blur-sm rounded-xl border-2 border-cyan-400/20/20 hover:border-cyan-400/20/40 transition-all duration-300">
+            <div key={country.slug} className="p-4 sm:p-6 bg-white/50 backdrop-blur-sm rounded-xl border-2 border-cyan-400/20 hover:border-cyan-400/40 transition-all duration-300">
               {editingCountry === country.id ? (
                 <div className="space-y-3 sm:space-y-4">
                   <h3 className="text-lg sm:text-xl font-semibold text-slate-100 mb-3 sm:mb-4">{country.name}</h3>
@@ -347,14 +368,14 @@ function CountriesTab({ countries }: { countries: any[] }) {
                     <Textarea id={`notes-${country.slug}`} value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} className="min-h-[120px] bg-white/90" />
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3">
-                    {country.id ? (
+                    {country.id && (
                       <Button
-                        onClick={() => handleSaveCountry(country.id)}
+                        onClick={() => handleSaveCountry(country.id!)}
                         className="gradient-accent text-white"
                       >
                         Save
                       </Button>
-                    ) : null}
+                    )}
                     <Button
                       onClick={() => setEditingCountry(null)}
                       variant="outline"
@@ -378,37 +399,14 @@ function CountriesTab({ countries }: { countries: any[] }) {
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    {country.id ? (
-                      <Button
-                        onClick={() => handleEditCountry(country)}
-                        className="w-full sm:w-auto gradient-accent text-white"
-                      >
-                        Edit
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={async () => {
-                          // Create DB record for a static-only country
-                          const newId = crypto.randomUUID();
-                          await db.transact(
-                            db.tx.countries[newId].update({
-                              name: country.name,
-                              slug: country.slug,
-                              population: country.population,
-                              groups: country.groups || 12,
-                              photoUrl: country.photoUrl || undefined,
-                              flag: country.flag || undefined,
-                            })
-                          );
-                          alert('Country record created. You can now edit it.');
-                        }}
-                        className="w-full sm:w-auto gradient-accent text-white"
-                      >
-                        Create
-                      </Button>
-                    )}
-                  </div>
+                  {country.id && (
+                    <Button
+                      onClick={() => handleEditCountry(country)}
+                      className="w-full sm:w-auto gradient-accent text-white"
+                    >
+                      Edit
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
@@ -418,9 +416,8 @@ function CountriesTab({ countries }: { countries: any[] }) {
     </Card>
   );
 }
-
 // Gallery Tab Component
-function GalleryTab({ galleryImages }: { galleryImages: any[] }) {
+function GalleryTab({ galleryImages, onUpdate }: { galleryImages: GalleryImage[]; onUpdate: () => void }) {
   const [selectedCountry, setSelectedCountry] = useState<string>(COUNTRIES[0].slug);
   const [imageUrls, setImageUrls] = useState(['', '', '', '', '']);
 
@@ -439,28 +436,26 @@ function GalleryTab({ galleryImages }: { galleryImages: any[] }) {
 
   const handleSaveGallery = async () => {
     try {
-      // Delete existing images for this country
-      const deleteTransactions = countryImages.map(img => db.tx.galleryImages[img.id].delete());
-      if (deleteTransactions.length > 0) {
-        await db.transact(deleteTransactions);
-      }
+      const token = getAuthToken();
+      if (!token) return;
 
-      // Create new images
-      const createTransactions = imageUrls
-        .filter(url => url.trim() !== '')
-        .map((url, index) =>
-          db.tx.galleryImages[id()].update({
-            countrySlug: selectedCountry,
-            imageUrl: url,
-            order: index + 1,
-          })
-        );
-
-      if (createTransactions.length > 0) {
-        await db.transact(createTransactions);
+      const res = await fetch('/api/admin/gallery', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          countrySlug: selectedCountry,
+          imageUrls,
+        }),
+      });
+      if (!res.ok) {
+        throw new Error('Failed to update gallery');
       }
 
       alert('Gallery updated successfully!');
+      onUpdate();
     } catch (err) {
       console.error('Error updating gallery:', err);
       alert('Error updating gallery');
@@ -468,7 +463,7 @@ function GalleryTab({ galleryImages }: { galleryImages: any[] }) {
   };
 
   return (
-    <Card className="border-cyan-400/20/50 glass-card backdrop-blur-sm">
+    <Card className="border-cyan-400/20 glass-card backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="text-2xl sm:text-3xl">Manage Gallery Images</CardTitle>
       </CardHeader>
@@ -488,7 +483,6 @@ function GalleryTab({ galleryImages }: { galleryImages: any[] }) {
             </SelectContent>
           </Select>
         </div>
-
         <div className="space-y-3 sm:space-y-4">
           {imageUrls.map((url, index) => (
             <div key={index} className="space-y-2">
