@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://hand_2_hand_user:H83QSpciBlQ3YFfysThJz5HAeXgGVJ8L@db:5432/hand_2_hand_db
+      - NEXT_PUBLIC_INSTANT_APP_ID=7b67f3b1-46b2-4724-a83d-ae3f6a47b087
+      - INSTANT_APP_SECRET=d7219b1a-f32f-4c0e-92af-e117bde71da5
+      - JWT_SECRET=your-secure-jwt-secret-key-change-this-in-production
+      - ADMIN_EMAIL=ericreiss@aol.com
+      - NODE_ENV=production
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - hand2hand
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=hand_2_hand_user
+      - POSTGRES_PASSWORD=H83QSpciBlQ3YFfysThJz5HAeXgGVJ8L
+      - POSTGRES_DB=hand_2_hand_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hand_2_hand_user -d hand_2_hand_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hand2hand
+
+networks:
+  hand2hand:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
