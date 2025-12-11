@@ -23,9 +23,6 @@ export default function CountryPageClient({ countrySlug }: CountryPageClientProp
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [countryData, setCountryData] = useState<any>(null);
-  const [galleryImages, setGalleryImages] = useState<any[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
 
   // Get authenticated user
   const { user, isLoading: authLoading } = db.useAuth();
@@ -40,66 +37,73 @@ export default function CountryPageClient({ countrySlug }: CountryPageClientProp
   // Find the country data
   const country = COUNTRIES.find(c => c.slug === countrySlug);
 
-  // Fetch data from API routes
+  // Query country data and user notes
+  const { isLoading, error, data } = db.useQuery(
+    user ? {
+      countries: {
+        $: { where: { slug: countrySlug } }
+      },
+      notes: {
+        $: { where: { userId: user.id, countrySlug } }
+      },
+      galleryImages: {
+        $: { where: { countrySlug } }
+      }
+    } : {
+      countries: {
+        $: { where: { slug: countrySlug } }
+      },
+      galleryImages: {
+        $: { where: { countrySlug } }
+      }
+    }
+  );
+
+  // Load existing note
   useEffect(() => {
-    if (!user || !country) return;
+    if (data && data.notes && data.notes.length > 0) {
+      setNoteContent(data.notes[0].content);
+    }
+  }, [data]);
 
-    const fetchData = async () => {
-      try {
-        // Fetch country data
-        const countryRes = await fetch(`/api/countries?slug=${countrySlug}`);
-        const countryJson = await countryRes.json();
-        let fetchedCountry = countryJson.country;
-
-        // Create country if doesn't exist
-        if (!fetchedCountry) {
-          const createRes = await fetch('/api/countries', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: country.name,
-              slug: country.slug,
-              population: country.population,
-              groups: DEFAULT_GROUPS,
-              flag: country.flag
-            })
-          });
-          const created = await createRes.json();
-          fetchedCountry = created.country;
-
-          // Create demo gallery images
-          const images = [];
-          for (let i = 1; i <= 5; i++) {
-            images.push({
-              imageUrl: `/demo-images/placeholder-${i}.jpg`,
-              order: i
-            });
-          }
-          await fetch('/api/gallery', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ countrySlug: country.slug, images })
-          });
+  // Initialize country data if doesn't exist
+  useEffect(() => {
+    const initCountryData = async () => {
+      if (!country || isLoading) return;
+      
+      if (data && data.countries.length === 0) {
+        // Create country data
+        const countryId = crypto.randomUUID();
+        await db.transact([
+          db.tx.countries[countryId].update({
+            name: country.name,
+            slug: country.slug,
+            population: country.population,
+            groups: DEFAULT_GROUPS,
+            flag: country.flag,
+          })
+        ]);
+        
+        // Create demo gallery images
+        const imagePromises = [];
+        for (let i = 1; i <= 5; i++) {
+          const imageId = crypto.randomUUID();
+          imagePromises.push(
+            db.transact([
+              db.tx.galleryImages[imageId].update({
+                countrySlug: country.slug,
+                imageUrl: `/demo-images/placeholder-${i}.jpg`,
+                order: i,
+              })
+            ])
+          );
         }
-
-        setCountryData(fetchedCountry);
-        setGalleryImages(fetchedCountry?.galleryImages || []);
-
-        // Fetch user note
-        const noteRes = await fetch(`/api/notes?countrySlug=${countrySlug}`);
-        const noteJson = await noteRes.json();
-        if (noteJson.note) {
-          setNoteContent(noteJson.note.content || '');
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setDataLoading(false);
+        await Promise.all(imagePromises);
       }
     };
-
-    fetchData();
-  }, [user, country, countrySlug]);
+    
+    initCountryData();
+  }, [country, isLoading, data]);
 
   const handleSaveNote = async () => {
     if (!user) return;
@@ -108,14 +112,29 @@ export default function CountryPageClient({ countrySlug }: CountryPageClientProp
     setSaveStatus('');
     
     try {
-      await fetch('/api/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          countrySlug,
-          content: noteContent
-        })
-      });
+      // Check if note exists
+      const existingNote = data?.notes?.[0];
+      
+      if (existingNote) {
+        // Update existing note
+        await db.transact([
+          db.tx.notes[existingNote.id].update({
+            content: noteContent,
+            updatedAt: Date.now(),
+          })
+        ]);
+      } else {
+        // Create new note
+        const noteId = crypto.randomUUID();
+        await db.transact([
+          db.tx.notes[noteId].update({
+            userId: user.id,
+            countrySlug,
+            content: noteContent,
+            updatedAt: Date.now(),
+          })
+        ]);
+      }
       
       setSaveStatus('Saved successfully!');
       setTimeout(() => setSaveStatus(''), 3000);
@@ -143,7 +162,7 @@ export default function CountryPageClient({ countrySlug }: CountryPageClientProp
     );
   }
 
-  if (authLoading || dataLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center gradient-bg bg-pattern">
         <div className="text-lg text-slate-300 animate-pulse">Loading...</div>
@@ -151,7 +170,7 @@ export default function CountryPageClient({ countrySlug }: CountryPageClientProp
     );
   }
 
-  const displayCountryData = countryData || {
+  const countryData = data?.countries[0] || {
     population: country.population,
     groups: DEFAULT_GROUPS,
     photoUrl: '',
@@ -160,18 +179,18 @@ export default function CountryPageClient({ countrySlug }: CountryPageClientProp
     adminNotes: '',
   };
   
-  const displayGalleryImages = galleryImages.filter(img => img.imageUrl && !img.imageUrl.includes('placeholder'));
+  const galleryImages = data?.galleryImages?.filter(img => img.imageUrl && !img.imageUrl.includes('placeholder')) || [];
 
   // Slideshow navigation
   const nextImage = () => {
-    if (displayGalleryImages.length > 0) {
-      setCurrentImageIndex((prev) => (prev + 1) % displayGalleryImages.length);
+    if (galleryImages.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
     }
   };
 
   const prevImage = () => {
-    if (displayGalleryImages.length > 0) {
-      setCurrentImageIndex((prev) => (prev - 1 + displayGalleryImages.length) % displayGalleryImages.length);
+    if (galleryImages.length > 0) {
+      setCurrentImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
     }
   };
 
@@ -212,8 +231,8 @@ export default function CountryPageClient({ countrySlug }: CountryPageClientProp
           </CardHeader>
           <CardContent>
             <div className="w-full h-48 sm:h-64 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center border-2 border-cyan-400/30 overflow-hidden">
-              {displayCountryData.photoUrl ? (
-                <img src={displayCountryData.photoUrl} alt={country.name} className="w-full h-full object-cover" />
+              {countryData.photoUrl ? (
+                <img src={countryData.photoUrl} alt={country.name} className="w-full h-full object-cover" />
               ) : (
                 <span className="text-slate-300 text-sm sm:text-lg text-center px-4 font-medium">Map / Photo - Admin will upload</span>
               )}
@@ -230,11 +249,11 @@ export default function CountryPageClient({ countrySlug }: CountryPageClientProp
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-4 sm:p-6 rounded-xl border-2 border-primary/20 shadow-lg transform hover:scale-105 transition-all duration-300">
                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-2">Population</h3>
-                <p className="text-2xl sm:text-3xl font-bold text-slate-100">{displayCountryData.population}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-slate-100">{countryData.population}</p>
               </div>
               <div className="bg-gradient-to-br from-accent/10 to-accent/5 p-4 sm:p-6 rounded-xl border-2 border-accent/20 shadow-lg transform hover:scale-105 transition-all duration-300">
                 <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-2">Number of Groups</h3>
-                <p className="text-2xl sm:text-3xl font-bold text-slate-100">{displayCountryData.groups}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-slate-100">{countryData.groups}</p>
               </div>
             </div>
           </CardContent>
@@ -247,8 +266,8 @@ export default function CountryPageClient({ countrySlug }: CountryPageClientProp
           </CardHeader>
           <CardContent>
             <div className="prose prose-invert max-w-none">
-              {displayCountryData.countryDetails ? (
-                <div className="text-slate-200 whitespace-pre-wrap">{displayCountryData.countryDetails}</div>
+              {countryData.countryDetails ? (
+                <div className="text-slate-200 whitespace-pre-wrap">{countryData.countryDetails}</div>
               ) : (
                 <div className="text-slate-400 italic">Admin will add country details</div>
               )}
@@ -263,8 +282,8 @@ export default function CountryPageClient({ countrySlug }: CountryPageClientProp
           </CardHeader>
           <CardContent>
             <div className="prose prose-invert max-w-none">
-              {displayCountryData.primaryContacts ? (
-                <div className="text-slate-200 whitespace-pre-wrap">{displayCountryData.primaryContacts}</div>
+              {countryData.primaryContacts ? (
+                <div className="text-slate-200 whitespace-pre-wrap">{countryData.primaryContacts}</div>
               ) : (
                 <div className="text-slate-400 italic">Admin will add primary contacts</div>
               )}
@@ -279,8 +298,8 @@ export default function CountryPageClient({ countrySlug }: CountryPageClientProp
           </CardHeader>
           <CardContent>
             <div className="prose prose-invert max-w-none">
-              {displayCountryData.adminNotes ? (
-                <div className="text-slate-200 whitespace-pre-wrap">{displayCountryData.adminNotes}</div>
+              {countryData.adminNotes ? (
+                <div className="text-slate-200 whitespace-pre-wrap">{countryData.adminNotes}</div>
               ) : (
                 <div className="text-slate-400 italic">Admin will add notes</div>
               )}

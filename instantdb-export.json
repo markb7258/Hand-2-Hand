@@ -1,0 +1,94 @@
+{
+  "exportDate": "2025-12-11T07:06:29.437Z",
+  "appId": "7b67f3b1-46b2-4724-a83d-ae3f6a47b087",
+  "entities": {
+    "profiles": [
+      {
+        "isAdmin": false,
+        "id": "17d59a13-81a7-4d50-b0a9-fd0fe955138b"
+      },
+      {
+        "id": "3a4b4600-1d6c-403e-a8b5-c445d570edb0",
+        "isAdmin": true
+      },
+      {
+        "displayName": "ericreiss",
+        "user": "18753726-f758-41c8-820b-6192c3bc90c8",
+        "isAdmin": true,
+        "id": "8b3047d8-54cb-4949-b4b8-b995b7209cfa"
+      },
+      {
+        "isAdmin": false,
+        "user": "600ba861-1e99-40f1-9c21-df297c74f65a",
+        "id": "0a5a53d2-1b7c-4461-8929-ac1fa70d808d",
+        "displayName": "wifobeb199"
+      },
+      {
+        "displayName": "yibol88621",
+        "id": "5b8a0234-6710-4ec8-a797-e8047c30cecc",
+        "user": "7c0d3bf1-8a0d-40c2-a65c-175f438ec663",
+        "isAdmin": false
+      }
+    ],
+    "countries": [
+      {
+        "name": "Argentina",
+        "slug": "argentina",
+        "groups": 12,
+        "flag": "🇦🇷",
+        "id": "d9aa7fbb-298d-4a50-a2cd-578dfd1a826b",
+        "population": "46,234,830"
+      }
+    ],
+    "notes": [
+      {
+        "id": "fda9cf71-b7e1-4c77-82d2-169a4e8afb03",
+        "content": "Test",
+        "userId": "18753726-f758-41c8-820b-6192c3bc90c8",
+        "countrySlug": "argentina",
+        "updatedAt": 1764696620498
+      }
+    ],
+    "galleryImages": [
+      {
+        "order": 1,
+        "countrySlug": "argentina",
+        "imageUrl": "/demo-images/placeholder-1.jpg",
+        "id": "e4967e9d-371c-450d-ba13-19adbde49b2e"
+      },
+      {
+        "id": "f5f2ff82-1ad7-428f-8258-21a9bb1480f0",
+        "order": 2,
+        "imageUrl": "/demo-images/placeholder-2.jpg",
+        "countrySlug": "argentina"
+      },
+      {
+        "id": "fefacf02-c02e-48fc-a888-23c30a654831",
+        "imageUrl": "/demo-images/placeholder-3.jpg",
+        "order": 3,
+        "countrySlug": "argentina"
+      },
+      {
+        "id": "859bb022-011f-4344-8228-cc4ea579a9af",
+        "countrySlug": "argentina",
+        "order": 4,
+        "imageUrl": "/demo-images/placeholder-4.jpg"
+      },
+      {
+        "id": "72445579-711c-4dfe-9831-e6b62e697dfd",
+        "order": 5,
+        "imageUrl": "/demo-images/placeholder-5.jpg",
+        "countrySlug": "argentina"
+      }
+    ]
+  },
+  "summary": {
+    "totalRecords": 12,
+    "entityCounts": {
+      "profiles": 5,
+      "countries": 1,
+      "notes": 1,
+      "galleryImages": 5
+    }
+  }
+}

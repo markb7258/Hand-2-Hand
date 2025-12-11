@@ -39,3 +39,12 @@ next-env.d.ts
 # Warp Agent Memory System (contains credentials)
 WARP_AGENT_LOG.md
 WARP_AGENT_TRANSCRIPTS/
+
+# Warp Agent Memory System
+WARP_AGENT_STATE.md
+WARP_AGENT_ARCHIVE/
+WARP_AGENT_TRANSCRIPTS/
+WARP_AGENT_LOG.md
+WARP_AGENT_LOG.md.backup
+
+/lib/generated/prisma
