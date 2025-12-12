@@ -2137,6 +2137,77 @@ gh api repos/<owner>/<repo>/automated-security-fixes --method PUT
        - Server reads from `/run/secrets/db_url`
        - This dummy URL is ONLY for CI/CD builds
 
+45. Grouped Dependency Updates in Auto-Merge Workflows (CRITICAL):
+    a) Dependabot creates two types of PRs:
+       - **Single package:** "bump next from 14.0.0 to 14.2.0" (has version numbers)
+       - **Grouped/multi-package:** "bump react and @types/react" or "bump the production-dependencies group" (NO version numbers)
+    
+    b) Auto-downgrade scripts CANNOT parse grouped update titles:
+       - No "from X to Y" pattern to extract versions
+       - Affects multiple packages at once
+       - Require different handling strategy
+    
+    c) ALWAYS detect grouped updates before attempting auto-downgrade:
+       ```bash
+       # Detect grouped updates
+       if echo "$PR_TITLE" | grep -q "bump the"; then
+         # This is a grouped update
+       fi
+       
+       # Detect multi-package updates
+       if echo "$PR_TITLE" | grep -q " and "; then
+         # This is a multi-package update
+       fi
+       ```
+    
+    d) For grouped updates that fail:
+       - Exit gracefully (don't fail the workflow)
+       - Add PR comment explaining manual review needed
+       - Include GITHUB_TOKEN env var for `gh pr comment`
+    
+    e) NEVER let auto-downgrade fail with exit code 1:
+       - Causes "all jobs have failed" emails
+       - Use `exit 0` after adding PR comment
+       - Graceful degradation is better than hard failure
+    
+    f) This prevents workflow failure emails while still notifying about issues
+
+46. Auto-Revert on Deployment Failures (CRITICAL):
+    a) Deployment workflow MUST include health checks after deployment:
+       - Wait 60 seconds for deployment to stabilize
+       - Check application HTTP status (200 = healthy)
+       - Retry 5 times with 10 second intervals
+    
+    b) If health check fails, AUTOMATICALLY revert:
+       ```bash
+       git revert --no-edit $CURRENT_COMMIT
+       git push origin main
+       ```
+       - Revert creates new commit that undoes the changes
+       - Push triggers automatic redeployment of previous version
+       - No manual intervention required
+    
+    c) Deployment workflow structure:
+       1. Checkout code with fetch-depth: 2 (need previous commit)
+       2. Get current and previous commit hashes
+       3. Trigger deployment via Coolify API
+       4. Wait for stabilization (60 seconds)
+       5. Health check with retries
+       6. If unhealthy: revert and redeploy
+       7. If healthy: notify success
+    
+    d) This ensures:
+       - Bad deployments never stay live
+       - Automatic rollback to last known good state
+       - No manual intervention or downtime
+       - Continuous availability
+    
+    e) Health check endpoint:
+       - Use main application URL (e.g., http://server:3000)
+       - Check for HTTP 200 status
+       - Don't use /api/health unless it exists
+       - Any 200 response means app is serving traffic
+
 ===== END AUTOMATIC UPDATES =====
 
 ===== END RULES =====
