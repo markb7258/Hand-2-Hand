@@ -2242,6 +2242,8 @@ gh api repos/<owner>/<repo>/automated-security-fixes --method PUT
        - 10:00 daily: Dependabot
        - 11:00 Monday: server maintenance (only if no open Dependabot PRs)
 
+===== END RULES =====
+
 ============================================================
 ===== ORIGINAL WEB DEV PROMPT END =====
 ============================================================
