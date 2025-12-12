@@ -557,93 +557,787 @@ export async function GET(request: NextRequest) {
 
 ===== RULES =====
 
-1. You must always do as much as you possibly can by yourself, by always using as many MCP server tools as you possibly can.
+1. You must always do as much as you possibly can by yourself, by always using as many MCP server tools as you possibly can:
 
-2. Before doing anything that may need docs, use Context7 MCP or BrightData MCP for documentation.
+-----
+
+COMMAND: npx-y @wonderwhy-er/desktop-commander@latest
+
+NAME: desktop-commander
+
+- get_config : Get the complete server configuration as JSON (includes blockedCommands, defaultShell, allowedDirectories, fileReadLineLimit, fileWriteLineLimit, telemetryEnabled)
+
+- set_config_value : Set a specific configuration value by key. Available settings: • blockedCommands: Array of shell commands that cannot be executed • defaultShell: Shell to use for commands (e.g., bash, zsh, powershell) • allowedDirectories: Array of filesystem paths the server can access for file operations (⚠️ terminal commands can still access files outside these directories) • fileReadLineLimit: Maximum lines to read at once (default: 1000) • fileWriteLineLimit: Maximum lines to write at once (default: 50) • telemetryEnabled: Enable/disable telemetry (boolean)
+
+- read_file : Read contents from local filesystem or URLs with line-based pagination (supports positive/negative offset and length parameters)
+
+- read_multiple_files : Read multiple files simultaneously
+
+- write_file : Write file contents with options for rewrite or append mode (uses configurable line limits)
+
+- create_directory : Create a new directory or ensure it exists
+
+- list_directory : Get detailed recursive listing of files and directories (supports depth parameter, default depth=2)
+
+- move_file : Move or rename files and directories
+
+- start_search : Start streaming search for files by name or content patterns (unified ripgrep-based search)
+
+- get_more_search_results : Get paginated results from active search with offset support
+
+- stop_search : Stop an active search gracefully
+
+- list_searches : List all active search sessions
+
+- get_file_info : Retrieve detailed metadata about a file or directory
+
+- edit_block : Apply targeted text replacements with enhanced prompting for smaller edits (includes character-level diff feedback)
+
+- start_process : Start programs with smart detection of when they're ready for input
+
+- read_process_output : Read output from running processes
+
+- interact_with_process : Send commands to running programs and get responses
+
+- force_terminate : Force terminate a running terminal session
+
+- list_sessions : List all active terminal sessions
+
+- list_processes : List all running processes with detailed information
+
+- kill_process : Terminate a running process by PID
+
+- get_usage_stats : Get usage statistics for your own insight
+
+- give_feedback_to_desktop_commander : Open feedback form in browser to provide feedback to Desktop Commander Team
+
+-----
+
+COMMAND: npx -y @instantdb/mcp -token per_78944fa4ba7c5c784ea7a836bb2f99ab4d737c6c70d47dea098d43bd16047fc1
+
+NAME: instant
+
+- create-app : Creates a new InstantDB application with optional schema and permissions
+
+- get-apps : Lists all apps owned by the authenticated user
+
+- get-app : Fetches a single app by ID
+
+- get-schema : Retrieves the schema for a specific app
+
+- get-perms : Retrieves permission rules for an app
+
+- plan-schema-push : Dry-run a schema update to preview changes
+
+- push-schema : Applies schema changes to an app. Run plan-schema-push first to preview
+
+- push-perms : Updates permission rules for an app
+
+-----
+
+COMMAND: uvx mcp-server-time
+
+NAME: time
+
+- get_current_time : Get current time in a specific timezone or system timezone (required: `timezone` string, IANA timezone name, e.g., `'America/New_York'`, `'Europe/London'`)
+
+- convert_time : Convert time between timezones (required: `source_timezone` string, source IANA timezone name; `time` string in 24-hour format `HH:MM`; `target_timezone` string, target IANA timezone name)
+
+-----
+
+COMMAND: npx -y @upstash/context7-mcp --api-key ctx7sk-1729a379-a882-4bd3-879d-729e7dbe99a3
+
+NAME: Context7
+
+- resolve-library-id : Resolve a general library name into a Context7-compatible library ID (required: `libraryName` string, the name of the library to search for)
+
+- get-library-docs : Fetch documentation for a library using a Context7-compatible library ID (required: `context7CompatibleLibraryID` string, e.g., `/mongodb/docs`, `/vercel/next.js`; optional: `topic` string, e.g., `"routing"`, `"hooks"`; `tokens` number, default 5000; values <1000 are automatically increased to 1000)
+
+-----
+
+COMMAND: npx-y @brightdata/mcp
+
+NAME: brightdata-mcp
+
+- search_engine : Scrape search results from Google. Returns SERP results in JSON.
+
+- scrape_as_markdown : Scrape a single webpage with advanced extraction and return Markdown.
+
+-----
+
+COMMAND: npx @browserbasehq/mcp-server-browserbase --modelName anthropic/claude-sonnet-4-5-20250929 --modelApiKey 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
+
+NAME: browserbase
+
+- browserbase_stagehand_navigate : Navigate to any URL in the browser; url (string, required): The URL to navigate to
+
+- browserbase_stagehand_act : Perform an action on the web page using natural language; action (string, required): The action to perform (e.g., "click the login button", "fill form field")
+
+- browserbase_stagehand_extract : Extract all text content from the current page (filters out CSS and JavaScript); No input parameters required; instruction (string): Extracted text content from the current page
+
+- browserbase_stagehand_observe : Observe and find actionable elements on the web page; instruction (string, required): Specific instruction for observation (e.g., "find the login button", "locate search form")
+
+- browserbase_screenshot : Capture a PNG screenshot of the current page; No input parameters required; image (string): Base-64 encoded PNG data
+
+- browserbase_stagehand_get_url : Get the current URL of the browser page; No input parameters required; url (string): Complete URL including protocol, domain, path, and any query parameters or fragments
+
+- browserbase_session_create : Create or reuse a cloud browser session using Browserbase with fully initialized Stagehand; sessionId (string, optional): Optional session ID to use/reuse. If not provided, creates new session
+
+- browserbase_session_close : Close the current Browserbase session, disconnect the browser, and cleanup Stagehand instance; No input parameters required
+
+"screenshot://screenshot-name-of-the-screenshot" is a URI-based reference to access screenshot resources. The Browserbase MCP server provides screenshot resources that can be accessed using this URI pattern. This allows you to reference and retrieve screenshots captured during browser automation sessions through the MCP protocol
+
+-----
+
+2. Before doing anything that may need docs, you can use the Context7 MCP server to get any doc from there to use those doc(s) as context (because it's a database of over 44,000 docs), and/or you can lookup/research using the "brightdata-mcp" MCP server tool
 
 3: Server-Side Database Operations (CRITICAL)
-   a) ALL data storage must be server-side via Next.js API routes
-   b) ALWAYS use PostgreSQL with Prisma ORM (dedicated service per app in Swarm)
+   a) ALL data storage and retrieval must be server-side via Next.js API routes
+   
+   b) Database choice:
+      - ALWAYS use PostgreSQL with dedicated service per app (see Deployment Strategy)
+      - PostgreSQL via Prisma ORM is the standard for all projects
+      - SQLite (better-sqlite3) ONLY for: proof-of-concepts, personal projects, or explicit user request
+      - MySQL (mysql2) ONLY if explicitly requested by user
+   
    c) Database operations pattern:
-      STEP 1: Create PostgreSQL service in docker-stack.yml
-      STEP 2: Create Prisma Client (lib/db.ts)
+      STEP 1: Create dedicated PostgreSQL service in docker-stack.yml
+      STEP 2: Create database connection file with Prisma Client (lib/db.ts)
       STEP 3: Define Prisma schema (prisma/schema.prisma)
-      STEP 4: Create API routes for CRUD operations
+      STEP 4: Create API routes in app/api/ for all CRUD operations
       STEP 5: Validate user session in EVERY API route
-      STEP 6: Row-level security in queries (where: { userId: user.id })
+      STEP 6: Implement row-level security in Prisma queries (where: { userId: user.id })
+   
    d) NEVER expose database credentials to client
-   e) Use zod for input validation on ALL API routes
-   f) InstantDB is ONLY used for authentication, NOT data storage
+   e) NEVER allow direct database access from client code
+   f) Use zod for input validation on ALL API routes
+   g) Use TypeScript types generated by Prisma for all database entities
+   
+   h) Standard database setup (PostgreSQL + Prisma):
+      ```typescript
+      // lib/db.ts
+      import { PrismaClient } from '@prisma/client';
+      
+      const globalForPrisma = globalThis as unknown as {
+        prisma: PrismaClient | undefined;
+      };
+      
+      export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+      
+      if (process.env.NODE_ENV !== 'production') {
+        globalForPrisma.prisma = prisma;
+      }
+      ```
+   
+   i) InstantDB is ONLY used for authentication, not data storage
 
-4. After building files, deploy without asking permission. Auto-deployment configured via GitHub Actions.
+4. After you build all the files for the first deployment, deploy without asking for permission. Auto-deployment will be configured via GitHub Actions (see Rule 58).
 
-5. Always use "start_process" MCP to start localhost for testing before deployment.
+5. After you build all the files/if you update any file(s), always use the "start_process" MCP server tool to start the localhost server so that I can test the website, before waiting for my confirmation on whether you must make any further update(s), or to deploy the website. Keep in mind, that after the first deployment, the website auto-deploys once GitHub detects you push the update(s) using the command "git push origin main".
 
-6. After building/updating files, check if WARP.md exists:
-   - If NO: Create comprehensive WARP.md documenting entire codebase
-   - If YES: Update WARP.md to match changes before deploying
+6. After you build all the files/if you update any file(s), and once I confirm the deployment, always first check if the WARP.md file exists, because if it doesn't, you must first analyze the entire codebase to create a WARP.md file, which will be given to future instances of Warp to operate in this repository. Make sure it summarizes every single part of the codebase as much as possible without losing a single detail, by organizing each section into a tree-like structure, to show what is where, and why it's there. Make sure to add the title to the file with the following text "WARP.md", and also, the first line should have the following text "This file provides guidance to WARP (warp.dev) when working with code in this repository". But, if the WARP.md file exists, then you must first update the WARP.md file so that it matches the change(s), before deploying them.
 
 7. Never use "npm run dev".
 
-8. Never auto-copy to clipboard, just show what to copy/paste.
+8. Never automatically copy anything to my clipboard, only show me what I need to copy/paste, if I ever need to manually copy/paste something.
 
-9. For SSH, always use "sshpass".
+9. To SSH, you must always use "sshpass".
 
-10. For web research, use BrightData MCP (scrape Google + scrape webpages).
+10. In order to lookup/research anything on the web, only use the "brightdata-mcp" MCP server tool to scrape Google search results, and then scrape the webpages in those results.
 
-11. For websites, use Browserbase MCP. For GitHub, use gh CLI.
+11. In order to use any website, (or the built/deployed website to test it, etc), always use the "browserbase" MCP server tool, but, to use GitHub, always use the GitHub CLI (gh)
 
-12. Shadcn UI is the foundational design - customize/extend it, never replace it.
+12. Shadcn UI must be the foundational design of every element on the website, therefore, any design modifications must customize, extend, or build on-top of the Shadcn UI template
 
-13. HTTPS needed for auth testing (requires custom domain), so skip auth tests without domain.
+13. In order to test authentication, the website must be https (not http), which requires a custom domain to be assigned to the website, therefore, if the website is not assigned to a custom domain, do not test authentication
 
-14. Before using ANY new tool:
-    a) Check CLI with `<tool> --help`
-    b) Try Context7 MCP for docs
-    c) Try BrightData MCP for official docs
-    d) Cache docs in WARP_AGENT_DOCS/
-    e) NEVER use tool without checking help and docs first
+14. Before doing anything related to InstantDB or ANY new tool:
+    a) FIRST: Check if the tool has a CLI, and if so, run `<tool> --help` to see all available commands
+    b) SECOND: Try to find documentation using Context7 MCP server
+    c) THIRD: Use BrightData MCP server to scrape official docs if Context7 doesn't have them
+    d) FOURTH: Cache all documentation in WARP_AGENT_DOCS/ for future reference
+    e) NEVER attempt to use a tool without checking help output and documentation first
+    f) This prevents situations where you don't know about CLI capabilities and resort to browser automation unnecessarily
 
-15. Before BrowserBase interactions, take screenshot to see current state.
+15. Before interacting with a website using the BrowserBase MCP server, you must first use the "browserbase_screenshot" MCP server tool, because you must always know exactly what the website is showing/doing.
 
-16. META MEMORY SYSTEM is your persistent memory. Work non-stop until complete, natural stopping point, or 180k tokens (Rule 18).
+16. The META MEMORY SYSTEM (WARP_AGENT_CONTEXT.md, WARP_AGENT_STATE.md, WARP_AGENT_ARCHIVE/, WARP_AGENT_TRANSCRIPTS/, and WARP_AGENT_DOCS/) is your persistent memory across sessions. You MUST work non-stop and never ask permission to continue just because tokens are running low. Always persist all state (actions, credentials, next steps) to the memory system as you work. Keep working aggressively until you complete the task, reach a natural stopping point, or detect the second token usage warning (see Rule 20).
 
 17: InstantDB Usage (Authentication Only)
-   a) InstantDB ONLY for authentication (signup, login, logout, email verification)
-   b) DO NOT use InstantDB for application data storage
-   c) Setup: `npx instant-cli init-without-files --title <APP_NAME>`
-   d) All data operations use PostgreSQL with API routes
+   a) InstantDB must ONLY be used for:
+      - User authentication (signup, login, logout)
+      - Email verification flows
+      - Optional: Session token generation
+   
+   b) DO NOT use InstantDB for:
+      - Application data storage
+      - User-generated content
+      - Messages, tasks, or any business logic data
+   
+   c) InstantDB setup procedure:
+      STEP 1: Create app: `npx instant-cli init-without-files --title <APP_NAME>`
+      STEP 2: Configure ONLY authentication in instant.schema.ts (no data entities)
+      STEP 3: Store InstantDB App ID and admin token in environment variables
+      STEP 4: Use InstantDB React SDK client-side ONLY for auth methods
+   
+   d) All data operations must use server-side database with API routes
+   
+   e) This approach provides:
+      - Better performance (server database is faster)
+      - No third-party data limits
+      - Full control over data
+      - Simpler codebase (no complex InstantDB permissions)
+      - InstantDB handles complex auth/email flows (their strength)
 
-18. STOP at 180,000 tokens (90% of 200K budget):
+18. You MUST stop working when token usage reaches **180,000 tokens** (90% of the 200K budget, leaving 10% remaining). When you detect token usage has reached or exceeded 180,000:
     - Immediately stop all new work
-    - Complete session closure (Section C)
-    - Update WARP_AGENT_STATE.md
-    - Inform user and do NOT make more tool calls
+    - Complete the session closure procedure (Section C) to update WARP_AGENT_STATE.md with remaining next steps
+    - Append a final message to the current session transcript noting the stop reason
+    - Inform the user: "I've reached 180,000 tokens (90% of budget, 10% remaining) and am stopping as instructed. All state has been saved to WARP_AGENT_STATE.md with remaining next steps. Use 'Continue' in a new conversation to resume from the state file."
+    - Do NOT make any more tool calls after this point
 
-19. Match CLI tool and library package versions.
+19. Before creating or configuring any InstantDB application, you MUST:
+    a) First call the InstantDB MCP tool "learn" to get the AGENTS.md documentation
+    b) Research the correct schema format by checking https://instantdb.com/docs/modeling-data.md
+    c) Verify the correct CLI commands from the documentation
+    d) Use `npx instant-cli init-without-files --title <APP_NAME>` to create apps (NOT MCP tools)
+    e) Ensure @instantdb/react version matches instant-cli version before pushing schema
 
-20. Never ask permission - do everything yourself.
+20. When working with ANY new technology or library you haven't used in this session:
+    a) Check for available MCP tools with "learn" or similar commands FIRST
+    b) Use Context7 MCP to fetch official documentation
+    c) Use BrightData MCP to scrape the official docs website if Context7 doesn't have it
+    d) Cache all fetched documentation in WARP_AGENT_DOCS/ for future reference
+    e) NEVER assume CLI commands or API formats - always verify from docs
 
-21. Install latest versions: `npm install <package>@latest`
+21. Before using any CLI tool with a library:
+    a) Check installed package version: `npm list <package-name>`
+    b) Check CLI tool version: `npx <cli-tool> --version`
+    c) If versions don't match or are significantly different, update to matching versions
+    d) This applies especially to: InstantDB, Next.js, Tailwind, and database CLIs
 
-22. BEFORE first git commit, verify .gitignore includes: node_modules/, .next/, .env.local, etc.
+22. Never ask permission to "build a complete application" or something like that, because again, you're supposed to always do as much as you possibly can by yourself, that includes everything until you're completely finished building AND deploying to the server
 
-23. Before pushing/deploying:
-    a) Verify git status (no node_modules/build)
-    b) Test build: `npm run build` succeeds
+23. Before using any CLI tool with a corresponding library package:
+    a) Install the latest version of both: `npm install <package>@latest`
+    b) Verify versions match: `npm list <package>` and `npx <cli-tool> --version`
+    c) If versions differ significantly (e.g. 0.14.x vs 0.22.x), upgrade both to latest
+    d) Never use mismatched major/minor versions between CLI tools and their SDK packages
+    e) This applies to: InstantDB, Next.js, Tailwind, Prisma, and any tool with both a package and CLI
 
-24. Always use --legacy-peer-deps: `npm install --legacy-peer-deps`
+24. BEFORE the first git commit, ALWAYS:
+    a) Create/verify .gitignore includes these entries:
+       - node_modules/
+       - .next/
+       - .cache/
+       - build/
+       - dist/
+       - .env.local
+       - .env*.local
+       - *.log
+       - .DS_Store
+    b) For Next.js projects specifically, NEVER commit build artifacts
+    c) Use `git status` to verify no large directories (>10MB) are staged before committing
+    d) If you accidentally commit large files, use `git rm -r --cached <directory>` before pushing
 
-25. MUST run `npm run build` locally BEFORE pushing.
+25. Before pushing to GitHub or deploying:
+    a) Run `git status` and verify:
+       - No node_modules/ or build directories are staged
+       - Only source files (.ts, .tsx, .js, config files) are included
+    b) Verify .gitignore is properly configured (see Rule 27)
+    c) Check package versions are aligned (see Rule 26)
+    d) Test build locally: `npm run build` succeeds without errors
+    e) If any large files are detected, stop and fix .gitignore before committing
 
-26. InstantDB permissions syntax:
-    a) Use `auth.id != null` NOT `auth.user.id != null`
-    b) Use `==` for comparison NOT `=`
-    c) Validate with: `npx instant-cli plan perms`
+26. Always use --legacy-peer-deps flag when running npm install:
+    ```bash
+    npm install --legacy-peer-deps
+    ```
+    This prevents conflicts with running MCP server npm processes and resolves peer dependency issues.
 
-27. Private repo deploy keys:
-    a) Generate: `ssh-keygen -t ed25519 -f /tmp/<repo>-deploy-key -N ''`
-    b) Add to GitHub: `gh repo deploy-key add <pub-key> --title 'Deploy Key' --allow-write`
+27. You must run `npm run build` locally BEFORE pushing to GitHub or deploying
+- If build fails, fix ALL errors before proceeding
+- NEVER push code without successful local build
+- This catches: missing dependencies, TypeScript errors, build config issues
+- Workflow: build → commit → push → deploy (in that exact order)
+
+28. CLI Documentation Research Priority:
+    a) BEFORE attempting ANY deployment, configuration, or complex operation with a tool:
+       STEP 1: Check CLI help output FIRST: `<tool> --help` and `<tool> <subcommand> --help`
+       STEP 2: Check cached documentation in WARP_AGENT_DOCS/
+       STEP 3: Use Context7 MCP to fetch official documentation
+       STEP 4: Use BrightData MCP to scrape official docs if Context7 doesn't have it
+       STEP 5: Try API endpoints (only if documented and CLI doesn't support the operation)
+       STEP 6: Browser automation with BrowserBase (ABSOLUTE LAST RESORT ONLY)
+    b) NEVER skip Step 1 - CLI help is ALWAYS the first step for any tool operation
+    c) NEVER jump to browser automation when an API fails - always exhaust CLI options first
+    d) For deployment tools (Docker, etc.), CLIs almost ALWAYS have deployment commands
+
+29. Tool Capability Research Upfront:
+    a) When working with ANY CLI tool for the first time in a session:
+       - IMMEDIATELY run `<tool> --help` and read ALL available commands
+       - Run `<tool> <subcommand> --help` for relevant subcommands
+       - Cache the help output in your working memory for the session
+    b) NEVER assume a CLI doesn't support an operation until you've checked help output
+    c) NEVER assume you need to use APIs or browser automation until CLI is confirmed insufficient
+    d) This rule applies to: GitHub CLI (gh), Docker CLI, Kubernetes CLI (kubectl), Terraform CLI, InstantDB CLI, npm/pnpm/yarn, and ALL other command-line tools
+
+30. Fallback Method Decision Tree:
+    a) When a method fails, use this exact decision tree:
+       IF CLI command exists for the operation:
+         → Debug the CLI command (check syntax, permissions, environment)
+         → Check CLI help for alternative commands/flags
+         → Search cached docs for CLI examples
+         → Try different CLI approaches
+       ELSE IF API endpoint is documented:
+         → Try API approach with proper authentication/headers
+         → Check API version compatibility
+         → Verify endpoint URL and method
+       ELSE IF all CLI and API methods exhausted:
+         → Document why CLI/API won't work
+         → ONLY THEN consider browser automation
+    b) NEVER use browser automation as a "quick fix" when you hit a roadblock
+    c) Browser automation should be used ONLY for:
+       - Operations that are literally impossible via CLI/API
+       - Initial account setup/registration that requires CAPTCHA
+       - Visual verification of UI state
+       - Extracting data from pages without APIs
+
+31. Error Response Analysis Before Fallback:
+    a) When ANY method fails, STOP and analyze the error:
+       - Read the FULL error message carefully
+       - Identify if error is: authentication, permissions, syntax, version mismatch, or missing feature
+       - Check if error suggests an alternative approach
+    b) NEVER immediately jump to a fallback method without understanding WHY the first method failed
+    c) Common error patterns that DON'T require fallback:
+       - "404 Not Found" on API → May mean endpoint doesn't exist, check CLI instead
+       - "Unauthorized" → Fix authentication, don't switch methods
+       - "Invalid syntax" → Fix the command, don't switch tools
+       - "Command not found" → Install the CLI, don't use browser
+    d) Questions to ask before fallback:
+       - "Did I check the help output?"
+       - "Did I verify the command syntax?"
+       - "Did I check the documentation?"
+       - "Is there a CLI command I missed?"
+    e) Only proceed to fallback if you can confidently answer:
+       "I have exhausted all CLI options, verified from help output and docs, and this operation is genuinely impossible via command line"
+
+32. API Endpoint Research Methodology (CRITICAL):
+    a) BEFORE attempting to use ANY API endpoint for the FIRST time:
+       STEP 1: Use Context7 to fetch documentation for the specific endpoint
+       STEP 2: Use BrightData to scrape the official API docs page
+       STEP 3: Cache the documentation in WARP_AGENT_DOCS/ with a descriptive filename
+       STEP 4: PARSE the documentation to identify:
+              - Required vs optional parameters
+              - Parameter names (exact spelling, case-sensitive)
+              - Parameter types and formats
+              - Known limitations or restrictions
+       STEP 5: Only THEN attempt the API call with the validated parameters
+    b) NEVER assume parameter names based on:
+       - CLI flag names
+       - Similar API endpoints
+       - Common naming patterns
+       - Logical guesses
+    c) NEVER attempt an API call without first researching the exact endpoint documentation
+    d) If an API call fails with validation errors:
+       - DO NOT try parameter name variations
+       - RE-READ the documentation
+       - Look for alternative methods
+
+33. Server Credentials - Respect Existing Values in NOTES and STATE:
+    a) ALWAYS check these sources for existing credentials in order:
+       STEP 1: Explicitly provided credentials in NOTES (highest priority)
+       STEP 2: Credentials from WARP_AGENT_STATE.md (current session state)
+       STEP 3: Credentials from user's message if they provide them
+    b) Use existing credentials if found in any of the above sources
+    c) ONLY generate new credentials if:
+       - User explicitly requests new credentials, OR
+       - Existing credentials fail after 2-3 verified attempts, OR
+       - No credentials exist in any source
+    d) When generating new credentials:
+       - Log them immediately in WARP_AGENT_STATE.md
+       - Use the format specified in NOTES section
+       - Document WHY new credentials were generated in session transcript
+    e) NEVER generate new credentials "just to be safe" - this creates confusion and waste
+
+34. API Parameter Validation Checklist:
+    a) After researching API documentation (Rule 52), create this validation checklist:
+       - [ ] All required parameters identified from docs
+       - [ ] Parameter types verified (string, boolean, integer, array, object)
+       - [ ] Parameter names copied EXACTLY (case-sensitive, no variations)
+       - [ ] Optional parameters and their defaults documented
+       - [ ] Known restrictions or limitations noted
+       - [ ] Unsupported parameters identified (to avoid sending them)
+    b) Test strategy:
+       - Start with ONLY required parameters
+       - Add optional parameters ONE AT A TIME
+       - Never send parameters not listed in documentation
+    c) When API returns validation errors:
+       - Extract the EXACT field name from error message
+       - Check if that field is in the API documentation
+       - If field is NOT in docs: Remove it, find alternative method
+       - If field IS in docs: Verify type and format match exactly
+    d) Document the validated parameter list in WARP_AGENT_DOCS/ for future reference
+
+35. Documentation Caching Strategy:
+    a) For each tool/service, maintain these docs in WARP_AGENT_DOCS/:
+       - {tool}-api-endpoints.md (overview of all endpoints)
+       - {tool}-api-{operation}.md (detailed docs for specific operations)
+       - {tool}-cli-commands.md (help output and command reference)
+       - {tool}-troubleshooting.md (common errors and their solutions)
+    b) At the START of working with ANY tool:
+       - Check WARP_AGENT_DOCS/ for existing cached documentation
+       - Check retrieval timestamp in cached files
+       - Re-fetch if > 30 days old OR if known to be incorrect
+    c) After solving ANY problem:
+       - Update {tool}-troubleshooting.md with:
+         * Error message (exact text)
+         * Root cause
+         * Solution (exact commands/steps)
+         * Prevention tips for future
+    d) This creates institutional knowledge across sessions and projects
+
+36. Two-Step Workarounds Documentation Pattern:
+    a) When you discover that a tool requires a two-step workaround:
+       - Document the EXACT steps in WARP_AGENT_DOCS/
+       - Explain WHY the workaround is necessary
+       - Include the error message that indicates this workaround is needed
+    b) Format for two-step workaround documentation:
+       ```markdown
+       # {Tool} - {Operation} Workaround
+       
+       ## Problem
+       - API/CLI doesn't support {feature} directly
+       - Error message: "exact error text"
+       
+       ## Root Cause
+       - {explanation of why the direct method doesn't work}
+       
+       ## Solution (Two-Step Workaround)
+       ### Step 1: {Primary Operation}
+       {exact command or API call}
+       
+       ### Step 2: {Database/Config Update}
+       {exact command to complete the operation}
+       
+       ## Verification
+       {how to verify it worked}
+       ```
+    c) This prevents repeatedly discovering the same workarounds across projects
+
+37. WebGL Canvas Rendering Best Practices (CRITICAL):
+    a) When using WebGL libraries (Three.js, OGL, PixiJS, etc.) with custom components:
+       - ALWAYS set resolutionScale or similar scaling parameters to 1.0 for full viewport coverage
+       - NEVER use scaling factors < 1.0 (like 0.75, 0.5) unless explicitly optimizing for performance AFTER confirming visual coverage works
+       - Understand the distinction between:
+         * CSS dimensions: Visual size of canvas element (what user sees)
+         * Canvas buffer dimensions: Actual rendering resolution (what WebGL draws to)
+         * Scaling parameters: Multipliers that reduce buffer size for performance
+    
+    b) Canvas dimension hierarchy:
+       - CSS controls VISUAL size: width/height in styles or viewport units (100vw, 100vh)
+       - Canvas attributes control BUFFER size: canvas.width and canvas.height properties
+       - WebGL viewport controls RENDER area: renderer.setSize() or gl.viewport()
+       - These three MUST be coordinated - mismatch causes empty/black areas
+    
+    c) When implementing full-screen WebGL backgrounds:
+       STEP 1: Start with resolutionScale = 1.0 (no optimization)
+       STEP 2: Verify full viewport coverage visually
+       STEP 3: Use renderer.setSize() as the library requires (don't bypass it)
+       STEP 4: Set CSS dimensions to match (100vw x 100vh or fixed positioning)
+       STEP 5: ONLY AFTER verifying coverage, consider reducing resolutionScale for performance
+    
+    d) Common WebGL canvas pitfalls to avoid:
+       - ❌ Setting resolutionScale < 1.0 before verifying coverage
+       - ❌ Bypassing renderer.setSize() and manually calling gl.viewport()
+       - ❌ Conflicting CSS dimensions and canvas buffer dimensions
+       - ❌ Using wrapper divs that constrain canvas size unexpectedly
+       - ✅ Use full resolution first, optimize second
+       - ✅ Let the library's renderer handle setup (e.g., renderer.setSize())
+       - ✅ Apply CSS positioning directly to canvas when possible
+       - ✅ Test on actual viewport before optimizing buffer resolution
+    
+    e) Debugging WebGL canvas issues:
+       - If canvas appears cut off or doesn't fill viewport:
+         * Check resolutionScale or similar parameters (set to 1.0)
+         * Verify renderer.setSize() is called with full dimensions
+         * Confirm CSS matches intended visual size
+         * Inspect canvas.width/height attributes vs CSS width/height
+       - If canvas is black/not rendering:
+         * Verify renderer.setSize() is being called (required by most libraries)
+         * Check that gl.viewport() matches renderer setup
+         * Ensure canvas buffer dimensions are set correctly
+
+38. InstantDB Schema and Permissions Syntax:
+    a) ALWAYS use strict validated syntax for InstantDB permissions:
+       - ✅ `auth.id != null` (check if user logged in)
+       - ❌ `auth.user.id != null` (no .user property)
+       
+       - ✅ `auth.id == data.creatorId` (comparison)
+       - ❌ `auth.id = data.creatorId` (assignment)
+       
+       - ✅ `isOwner` (use bind alias directly)
+       - ❌ `isOwner()` (bind is not a function)
+    b) For relation checks, use `ref()` with dot notation:
+       ```typescript
+       "view": "'admin' in auth.ref('$user.role.type')"
+       "delete": "'joe@example.com' in data.ref('users.email')"
+       ```
+    c) Use `bind` for aliasing complex expressions:
+       ```typescript
+       "bind": [
+         "isOwner", "auth.id != null && auth.id == data.creatorId",
+         "isAdmin", "auth.email in ['admin@example.com']"
+       ]
+       ```
+    d) ALWAYS validate permissions locally before pushing:
+       ```bash
+       npx instant-cli plan perms
+       ```
+       This shows what changes will be made WITHOUT applying them
+    e) If schema push fails:
+       - Run `npx instant-cli plan perms` to see validation errors
+       - Fix syntax errors in `instant.perms.ts`
+       - Re-validate with `plan perms` before `push perms`
+    f) Common syntax errors to avoid:
+       | Wrong | Correct |
+       |-------|--------|
+       | `auth.user.id` | `auth.id` |
+       | `isOwner()` | `isOwner` |
+       | `auth.id = data.id` | `auth.id == data.id` |
+       | `data.user.email` | `data.ref('users.email')` |
+    g) Use TypeScript types for compile-time validation:
+       ```typescript
+       import type { InstantRules } from '@instantdb/react';
+       const rules = {
+         // ... your rules
+       } satisfies InstantRules;
+       export default rules;
+       ```
+
+39. Private GitHub Repository Deploy Key Setup (CRITICAL):
+    a) For private repositories, ALWAYS use SSH authentication with deploy keys, NEVER HTTPS
+    b) Generate deploy key: `ssh-keygen -t ed25519 -f /tmp/<repo-name>-deploy-key -N '' -C '<repo-name>-deploy-key'`
+    c) Add deploy key to GitHub: `gh repo deploy-key add <public-key-path> --title 'Deploy Key' --allow-write`
+    d) This MUST be done BEFORE the first deployment attempt
+
+40. VIP Builder Branding (CRITICAL - REQUIRED ON EVERY PROJECT):
+    a) MUST add footer to EVERY page with text: "This business was built by VIP Builder AI"
+    b) Implementation: Add to app/layout.tsx or root layout component
+    c) Styling: Small text, muted color, centered or right-aligned, py-4 padding
+    d) Example:
+       ```tsx
+       <footer className="text-center py-4 text-sm text-gray-500">
+         This business was built by VIP Builder AI
+       </footer>
+       ```
+    e) NEVER deploy without this footer - verify before every deployment
+
+41. Traefik Reverse Proxy with Automatic SSL (REQUIRED FOR ALL DOMAINS):
+    a) When user provides a custom domain, ALWAYS use Traefik for SSL termination
+    b) NEVER use standalone acme.sh for Docker Swarm deployments - Traefik handles everything
+    c) Traefik automatically obtains and renews certificates from ZeroSSL
+    
+    d) Add Traefik service to docker-stack.yml:
+       ```yaml
+       services:
+         traefik:
+           image: traefik:v2.11
+           deploy:
+             replicas: 1
+             placement:
+               constraints:
+                 - node.role == manager
+             labels:
+               - "traefik.enable=true"
+               - "traefik.http.routers.traefik.rule=Host(`traefik.{DOMAIN}`)"
+               - "traefik.http.routers.traefik.entrypoints=websecure"
+               - "traefik.http.routers.traefik.tls.certresolver=zerossl"
+               - "traefik.http.routers.traefik.service=api@internal"
+           ports:
+             - "80:80"
+             - "443:443"
+           command:
+             - "--api.dashboard=true"
+             - "--providers.docker.swarmMode=true"
+             - "--providers.docker.exposedbydefault=false"
+             - "--providers.docker.network={STACK_NAME}_appnet"
+             - "--entrypoints.web.address=:80"
+             - "--entrypoints.websecure.address=:443"
+             - "--certificatesresolvers.zerossl.acme.email=admin@{DOMAIN}"
+             - "--certificatesresolvers.zerossl.acme.storage=/letsencrypt/acme.json"
+             - "--certificatesresolvers.zerossl.acme.httpchallenge.entrypoint=web"
+             - "--certificatesresolvers.zerossl.acme.caserver=https://acme.zerossl.com/v2/DV90"
+             - "--certificatesresolvers.zerossl.acme.eab.kid=R5xx_bjD1voFiItjwaLeWA"
+             - "--certificatesresolvers.zerossl.acme.eab.hmacencoded=Nrk6tKdDIwM4qM-OSYTbv7kmWCxd7nN4y_x0XURmbFxbE8225TWs8paGqdJkZsF7JGZlkJFhXsCeu7Znz37fcw"
+             - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+             - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+           volumes:
+             - /var/run/docker.sock:/var/run/docker.sock:ro
+             - traefik_certs:/letsencrypt
+           networks:
+             - appnet
+       
+       volumes:
+         traefik_certs:
+           driver: local
+       ```
+    
+    e) Update app service with Traefik labels (REMOVE direct port mapping):
+       ```yaml
+       services:
+         app:
+           # ... existing config ...
+           deploy:
+             labels:
+               - "traefik.enable=true"
+               - "traefik.http.routers.app.rule=Host(`{DOMAIN}`) || Host(`www.{DOMAIN}`)"
+               - "traefik.http.routers.app.entrypoints=websecure"
+               - "traefik.http.routers.app.tls.certresolver=zerossl"
+               - "traefik.http.services.app.loadbalancer.server.port=3000"
+           # REMOVE THIS: ports: - "3000:3000"  (Traefik handles all traffic)
+       ```
+    
+    f) Certificate issuance:
+       - Automatic via ACME HTTP-01 challenge
+       - Takes 30-60 seconds on first deployment
+       - Certificate stored in traefik_certs volume
+       - Auto-renews 30 days before expiration
+    
+    g) Verification:
+       ```bash
+       # Check Traefik logs
+       docker service logs {STACK_NAME}_traefik --tail 50
+       
+       # Test HTTPS
+       curl -I https://{DOMAIN}/
+       
+       # Test HTTP redirect
+       curl -I http://{DOMAIN}/  # Should return 308 Permanent Redirect
+       
+       # Verify certificate
+       echo | openssl s_client -connect {DOMAIN}:443 -servername {DOMAIN} 2>/dev/null | openssl x509 -noout -issuer
+       # Should show: issuer=C=AT, O=ZeroSSL, CN=ZeroSSL RSA Domain Secure Site CA
+       ```
+    
+    h) Common issues:
+       - Certificate not trusted initially: Traefik uses self-signed cert while obtaining real one (wait 30-60 seconds)
+       - Port 80/443 already in use: Stop other services or remove conflicting port mappings
+       - ACME challenge fails: Ensure domain DNS points to server and port 80 is accessible
+
+42. Daily Server Backups to GoFile (REQUIRED FOR ALL PROJECTS):
+    a) Script: `/root/scripts/daily-backup.sh`
+    b) Backs up: Docker volumes, app files, SSL certs, configs
+    c) Upload to GoFile with token: z9yW4VXg5Hu5qzNk7Rn0ywidKgvmTwsu
+    d) Schedule: Daily 3 AM UTC via cron
+    e) Format: YYYY-MM-DD-server-snapshot.tar.gz
+    f) Retention: 30 days
+    g) EVERY project must have backups configured before going live
+
+43. Docker Secrets Management in Application Code (CRITICAL):
+    a) ALWAYS create a secrets helper file (lib/secrets.ts) for reading Docker secrets:
+       ```typescript
+       import { readFileSync } from 'fs';
+       
+       /**
+        * Read a secret from Docker secret file or fall back to environment variable
+        * @param envVarName - Name of the environment variable (e.g., "JWT_SECRET")
+        * @param secretFilePath - Optional path to secret file (defaults to /run/secrets/<envVarName>)
+        * @param fallback - Fallback value if neither file nor env var exists
+        */
+       export function getSecret(
+         envVarName: string,
+         secretFilePath?: string,
+         fallback?: string
+       ): string {
+         // Try reading from Docker secret file first
+         const filePath = secretFilePath || `/run/secrets/${envVarName.toLowerCase()}`;
+         try {
+           const secret = readFileSync(filePath, 'utf8').trim();
+           if (secret) return secret;
+         } catch {
+           // File doesn't exist or can't be read - fall through to env var
+         }
+         
+         // Fall back to environment variable
+         const envValue = process.env[envVarName];
+         if (envValue) return envValue;
+         
+         // Use fallback if provided
+         if (fallback) return fallback;
+         
+         throw new Error(
+           `Secret ${envVarName} not found in Docker secrets or environment variables`
+         );
+       }
+       
+       /**
+        * Get DATABASE_URL from Docker secret file or environment variable
+        */
+       export function getDatabaseUrl(): string {
+         // Check for DATABASE_URL_FILE env var (points to secret file)
+         const urlFile = process.env.DATABASE_URL_FILE;
+         if (urlFile) {
+           try {
+             return readFileSync(urlFile, 'utf8').trim();
+           } catch {
+             // Fall through to regular env var
+           }
+         }
+         
+         // Try reading from standard Docker secret location
+         try {
+           return readFileSync('/run/secrets/db_url', 'utf8').trim();
+         } catch {
+           // Fall through to env var
+         }
+         
+         // Fall back to DATABASE_URL env var
+         const envUrl = process.env.DATABASE_URL;
+         if (envUrl) return envUrl;
+         
+         throw new Error('DATABASE_URL not found in Docker secrets or environment variables');
+       }
+       ```
+    
+    b) Update authentication code (lib/auth.ts):
+       ```typescript
+       import { getSecret } from './secrets';
+       
+       const JWT_SECRET = getSecret('JWT_SECRET', '/run/secrets/jwt_secret', 'fallback-secret-key');
+       ```
+    
+    c) Update database code (lib/db.ts):
+       ```typescript
+       import { PrismaClient } from '@prisma/client';
+       import { getDatabaseUrl } from './secrets';
+       
+       const globalForPrisma = globalThis as unknown as {
+         prisma: PrismaClient | undefined;
+       };
+       
+       // Set DATABASE_URL from Docker secrets if not already set
+       if (!process.env.DATABASE_URL) {
+         try {
+           process.env.DATABASE_URL = getDatabaseUrl();
+         } catch (error) {
+           console.warn('Failed to load DATABASE_URL from secrets:', error);
+         }
+       }
+       
+       export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+       
+       if (process.env.NODE_ENV !== 'production') {
+         globalForPrisma.prisma = prisma;
+       }
+       ```
+    
+    d) This pattern works seamlessly for:
+       - Docker Swarm (reads from /run/secrets/)
+       - Local development (falls back to environment variables)
+       - Testing (uses fallback values)
+    
+    e) NEVER hardcode sensitive values - always use this secrets pattern
 
 ===== DEPLOYMENT STRATEGY (DOCKER SWARM) =====
 
@@ -660,6 +1354,77 @@ export async function GET(request: NextRequest) {
 - ✅ Overlay networks for service communication
 - ✅ Minimal learning curve (same as Compose)
 - ✅ Works on same servers (no extra infrastructure)
+
+===== DOCKER SWARM NETWORK CONFLICTS (CRITICAL) =====
+
+**PROBLEM:** Docker Swarm's default ingress network (10.0.0.0/24) often conflicts with existing bridge networks, causing "invalid pool request: Pool overlaps" errors.
+
+**ROOT CAUSE:** 
+- Default bridge network: 10.0.0.0/24
+- Default Swarm ingress network: 10.0.0.0/24
+- Overlay networks may also conflict with existing networks
+
+**SOLUTION:** ALWAYS initialize Swarm with custom address pool to prevent conflicts.
+
+**Correct Swarm Initialization:**
+```bash
+# Initialize with custom IP range (10.20.0.0/16) to avoid conflicts
+docker swarm init --advertise-addr <server-ip> --default-addr-pool 10.20.0.0/16 --default-addr-pool-mask-length 24
+```
+
+**If Swarm Already Initialized (Fix Conflicts):**
+```bash
+# Remove existing stack first
+docker stack rm <stack-name>
+sleep 10
+
+# Leave Swarm
+docker swarm leave --force
+
+# Reinitialize with custom address pool
+docker swarm init --advertise-addr <server-ip> --default-addr-pool 10.20.0.0/16 --default-addr-pool-mask-length 24
+
+# Recreate secrets (they're deleted when leaving Swarm)
+# ... recreate all secrets here ...
+```
+
+**docker-stack.yml Network Configuration:**
+```yaml
+networks:
+  appnet:
+    driver: overlay
+    attachable: true
+    ipam:
+      config:
+        - subnet: 10.10.0.0/24  # Custom subnet within custom pool
+```
+
+**Verification:**
+```bash
+# Check for network conflicts BEFORE deploying
+docker network inspect bridge | grep Subnet
+# Should show: 10.0.0.0/24
+
+docker network inspect ingress | grep Subnet  
+# Should show: 10.20.0.0/24 (from custom pool, not conflicting)
+
+# After creating overlay network
+docker network inspect <stack-name>_appnet | grep Subnet
+# Should show: 10.10.0.0/24 (custom subnet)
+```
+
+**Common Error Messages:**
+- "invalid pool request: Pool overlaps with other one on this address space"
+  → Solution: Reinitialize Swarm with --default-addr-pool flag
+
+- "Services reject with network errors"
+  → Solution: Specify custom subnet in docker-stack.yml networks section
+
+**Why This Matters:**
+- Prevents deployment failures
+- Avoids service rejection loops
+- Ensures smooth Swarm operation
+- No conflicts with existing Docker networks
 
 **Dockerfile (Multi-Stage):**
 ```dockerfile
@@ -774,6 +1539,9 @@ networks:
   appnet:
     driver: overlay
     attachable: true
+    ipam:
+      config:
+        - subnet: 10.10.0.0/24  # Custom subnet to avoid conflicts
 ```
 
 **Initial Deployment Steps:**
@@ -783,9 +1551,10 @@ STEP 1: SSH into server
 sshpass -p '<password>' ssh root@<server-ip>
 ```
 
-STEP 2: Initialize Docker Swarm (first time only)
+STEP 2: Initialize Docker Swarm with custom address pool (first time only)
 ```bash
-docker swarm init --advertise-addr <server-ip>
+# CRITICAL: Use custom address pool to avoid network conflicts
+docker swarm init --advertise-addr <server-ip> --default-addr-pool 10.20.0.0/16 --default-addr-pool-mask-length 24
 # Save the join token if adding worker nodes later
 ```
 
@@ -948,16 +1717,147 @@ docker exec $(docker ps -q -f name=<app-name>_app) npx prisma migrate deploy
 docker service update --replicas 2 <app-name>_app
 ```
 
+===== TROUBLESHOOTING DOCKER SWARM + TRAEFIK =====
+
+**Common Issues and Solutions:**
+
+1. **"invalid pool request: Pool overlaps with other one on this address space"**
+   - **Cause:** Network conflict between bridge (10.0.0.0/24) and Swarm ingress (10.0.0.0/24)
+   - **Solution:** Reinitialize Swarm with custom address pool:
+     ```bash
+     docker stack rm <stack-name>
+     docker swarm leave --force
+     docker swarm init --advertise-addr <server-ip> --default-addr-pool 10.20.0.0/16 --default-addr-pool-mask-length 24
+     # Recreate all secrets
+     # Redeploy stack
+     ```
+
+2. **Prisma generate fails during Docker build: "Missing required environment variable: DATABASE_URL"**
+   - **Cause:** DATABASE_URL not available at build time for Prisma
+   - **Solution:** Pass DATABASE_URL as build arg:
+     ```bash
+     docker build --build-arg DATABASE_URL="postgresql://user:pass@db:5432/dbname" -t image:latest .
+     ```
+
+3. **Services show "0/2 replicas" and reject with network errors**
+   - **Cause:** Overlay network subnet conflicts with existing networks
+   - **Solution:** Specify custom subnet in docker-stack.yml:
+     ```yaml
+     networks:
+       appnet:
+         driver: overlay
+         attachable: true
+         ipam:
+           config:
+             - subnet: 10.10.0.0/24
+     ```
+
+4. **SSL certificate not trusted / "unable to get local issuer certificate"**
+   - **Cause:** Traefik uses self-signed cert as fallback while obtaining real certificate from ZeroSSL
+   - **Solution:** Wait 30-60 seconds for ACME HTTP-01 challenge to complete
+   - **Verification:**
+     ```bash
+     docker service logs <stack-name>_traefik --tail 50
+     # Look for: "Certificate obtained for domain"
+     ```
+
+5. **Port 80 or 443 already in use**
+   - **Cause:** Another service (nginx, apache, or docker-compose) using the ports
+   - **Solution:** Stop conflicting services:
+     ```bash
+     # Check what's using ports
+     netstat -tulpn | grep -E ':(80|443)'
+     
+     # Stop docker-compose services if running
+     docker-compose -f docker-compose.prod.yml down
+     
+     # Stop nginx/apache if running
+     systemctl stop nginx apache2
+     ```
+
+6. **Traefik not routing traffic to app service**
+   - **Cause:** Missing or incorrect Traefik labels
+   - **Solution:** Verify labels in docker-stack.yml:
+     ```yaml
+     deploy:
+       labels:
+         - "traefik.enable=true"
+         - "traefik.http.routers.app.rule=Host(`domain.com`)"
+         - "traefik.http.routers.app.entrypoints=websecure"
+         - "traefik.http.routers.app.tls.certresolver=zerossl"
+         - "traefik.http.services.app.loadbalancer.server.port=3000"
+     ```
+   - **Also check:** Ensure app service is on same network as Traefik (appnet)
+
+7. **"Error creating secret: secret already exists"**
+   - **Cause:** Trying to create a secret that wasn't removed from previous deployment
+   - **Solution:** Remove old secret first:
+     ```bash
+     docker secret rm <secret-name>
+     # Then create new secret
+     ```
+
+8. **Services running but website shows "502 Bad Gateway"**
+   - **Cause:** App service not ready or wrong port configuration
+   - **Solution:** Check app logs and verify port:
+     ```bash
+     docker service logs <stack-name>_app --tail 50
+     # Ensure app is listening on port 3000
+     # Verify Traefik label: traefik.http.services.app.loadbalancer.server.port=3000
+     ```
+
+9. **ACME HTTP challenge fails**
+   - **Cause:** Domain DNS not pointing to server or port 80 not accessible
+   - **Solution:** Verify DNS and port:
+     ```bash
+     # Check DNS
+     dig +short domain.com A
+     # Should return server IP
+     
+     # Check port 80 accessibility from outside
+     curl -v http://domain.com/
+     # Should reach Traefik (may redirect to HTTPS)
+     ```
+
+10. **Docker secrets not being read by application**
+    - **Cause:** Application not configured to read from /run/secrets/
+    - **Solution:** Implement secrets helper (see Rule 43) in lib/secrets.ts
+
+**Quick Debugging Commands:**
+```bash
+# Check all services status
+docker service ls
+
+# Check specific service details
+docker service ps <stack-name>_app --no-trunc
+
+# View service logs
+docker service logs <stack-name>_app --tail 100 -f
+docker service logs <stack-name>_traefik --tail 100 -f
+
+# Check network configuration
+docker network inspect <stack-name>_appnet | grep -A 5 IPAM
+
+# Check secrets
+docker secret ls
+
+# Test certificate
+echo | openssl s_client -connect domain.com:443 -servername domain.com 2>/dev/null | openssl x509 -noout -issuer -dates
+
+# Check Traefik configuration
+docker exec $(docker ps -q -f name=traefik) cat /letsencrypt/acme.json | jq .
+```
+
 ===== END DEPLOYMENT STRATEGY =====
 
 ===== AUTOMATIC DEPENDENCY UPDATES (STABLE ONLY) =====
 
 **CRITICAL: Only update to stable versions, NEVER beta/alpha/rc/canary/next.**
 
-28. Automatic Update System:
-    a) Dependabot daily updates (stable only)
-    b) Auto-downgrade on failed builds
-    c) Weekly server updates (Monday 10 AM UTC)
+**Automatic Update System (Rule 60 - Replaced with Stable Only Policy):**
+    a) ALWAYS configure Dependabot for daily dependency updates at 10:00 AM UTC
+    b) ALWAYS implement intelligent auto-downgrade system for failed builds
+    c) ALWAYS configure weekly server updates on Monday at 10:00 AM UTC (after dependencies)
 
 **.github/dependabot.yml:**
 ```yaml
@@ -1101,7 +2001,7 @@ jobs:
     steps:
       - name: Check for open Dependabot PRs
         id: check_prs
-        run: |
+        run: |\
           OPEN_PRS=$(gh pr list --label dependencies --state open --json number --jq 'length')
           echo "open_prs=$OPEN_PRS" >> $GITHUB_OUTPUT
         env:
@@ -1160,7 +2060,7 @@ Docker Swarm handles updates automatically:
 - Traffic routed only to healthy replicas
 ```
 
-29. GitHub Labels:
+**GitHub Labels (Rule 61 - Replaced with Stable Only Policy):**
 ```bash
 gh label create "dependencies" --description "Dependency updates" --color "0366d6"
 gh label create "npm" --description "NPM updates" --color "cb3837"
@@ -1168,53 +2068,11 @@ gh label create "automated" --description "Automated updates" --color "ededed"
 gh label create "github-actions" --description "Actions updates" --color "2088ff"
 ```
 
-30. Enable Dependabot (Private Repos):
+**Enable Dependabot (Rule 62 - Replaced with Stable Only Policy):**
 ```bash
 gh api repos/<owner>/<repo>/vulnerability-alerts --method PUT
 gh api repos/<owner>/<repo>/automated-security-fixes --method PUT
 ```
-
-31. VIP Builder Branding (CRITICAL - REQUIRED ON EVERY PROJECT):
-    a) MUST add footer to EVERY page with text: "This business was built by VIP Builder AI"
-    b) Implementation: Add to app/layout.tsx or root layout component
-    c) Styling: Small text, muted color, centered or right-aligned, py-4 padding
-    d) Example:
-       ```tsx
-       <footer className="text-center py-4 text-sm text-gray-500">
-         This business was built by VIP Builder AI
-       </footer>
-       ```
-    e) NEVER deploy without this footer - verify before every deployment
-
-32. ZeroSSL Certificate Management (REQUIRED FOR ALL DOMAINS):
-    a) Use acme.sh with ZeroSSL ACME endpoint (https://acme.zerossl.com/v2/DV90)
-    b) One-time setup:
-       ```bash
-       curl https://get.acme.sh | sh -s email=admin@example.com
-       source ~/.bashrc
-       acme.sh --register-account \
-         --server https://acme.zerossl.com/v2/DV90 \
-         --eab-kid R5xx_bjD1voFiItjwaLeWA \
-         --eab-hmac-key Nrk6tKdDIwM4qM-OSYTbv7kmWCxd7nN4y_x0XURmbFxbE8225TWs8paGqdJkZsF7JGZlkJFhXsCeu7Znz37fcw
-       ```
-    c) Issue certificate:
-       ```bash
-       acme.sh --issue -d example.com -d www.example.com \
-         --server https://acme.zerossl.com/v2/DV90 \
-         --webroot /var/www/html
-       ```
-    d) Install for nginx/traefik with auto-reload
-    e) Automatic renewal via acme.sh cron
-    f) EVERY domain must have valid SSL before going live
-
-33. Daily Server Backups to GoFile (REQUIRED FOR ALL PROJECTS):
-    a) Script: `/root/scripts/daily-backup.sh`
-    b) Backs up: Docker volumes, app files, SSL certs, configs
-    c) Upload to GoFile with token: z9yW4VXg5Hu5qzNk7Rn0ywidKgvmTwsu
-    d) Schedule: Daily 3 AM UTC via cron
-    e) Format: YYYY-MM-DD-server-snapshot.tar.gz
-    f) Retention: 30 days
-    g) EVERY project must have backups configured before going live
 
 ===== END AUTOMATIC UPDATES =====
 
