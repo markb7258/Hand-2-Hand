@@ -1,6 +1,44 @@
 version: '3.8'
 
 services:
+  traefik:
+    image: traefik:v2.11
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.traefik.rule=Host(`traefik.h2hmissions.com`)"
+        - "traefik.http.routers.traefik.entrypoints=websecure"
+        - "traefik.http.routers.traefik.tls.certresolver=zerossl"
+        - "traefik.http.routers.traefik.service=api@internal"
+        - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+    ports:
+      - "80:80"
+      - "443:443"
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=hand2hand_appnet"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.zerossl.acme.email=admin@h2hmissions.com"
+      - "--certificatesresolvers.zerossl.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.zerossl.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.zerossl.acme.caserver=https://acme.zerossl.com/v2/DV90"
+      - "--certificatesresolvers.zerossl.acme.eab.kid=R5xx_bjD1voFiItjwaLeWA"
+      - "--certificatesresolvers.zerossl.acme.eab.hmacencoded=Nrk6tKdDIwM4qM-OSYTbv7kmWCxd7nN4y_x0XURmbFxbE8225TWs8paGqdJkZsF7JGZlkJFhXsCeu7Znz37fcw"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_certs:/letsencrypt
+    networks:
+      - appnet
+
   app:
     image: hand-2-hand:latest
     build:
@@ -16,8 +54,12 @@ services:
         condition: on-failure
         delay: 5s
         max_attempts: 3
-    ports:
-      - "3000:3000"
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.app.rule=Host(`h2hmissions.com`) || Host(`www.h2hmissions.com`)"
+        - "traefik.http.routers.app.entrypoints=websecure"
+        - "traefik.http.routers.app.tls.certresolver=zerossl"
+        - "traefik.http.services.app.loadbalancer.server.port=3000"
     environment:
       - DATABASE_URL_FILE=/run/secrets/db_url
       - NEXT_PUBLIC_INSTANT_APP_ID=7b67f3b1-46b2-4724-a83d-ae3f6a47b087
@@ -74,6 +116,8 @@ secrets:
 
 volumes:
   postgres_data:
+    driver: local
+  traefik_certs:
     driver: local
 
 networks:
