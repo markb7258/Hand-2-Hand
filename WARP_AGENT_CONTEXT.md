@@ -2321,6 +2321,18 @@ gh api repos/<owner>/<repo>/automated-security-fixes --method PUT
                exit 0  # CRITICAL: exit 0, not exit 1
              fi
              ```
+       - [ ] Implement major version update detection (see Rule 50):
+             ```bash
+             CURRENT_MAJOR=$(echo "$CURRENT_VERSION" | cut -d. -f1)
+             NEW_MAJOR=$(echo "$NEW_VERSION" | cut -d. -f1)
+             if [ "$NEW_MAJOR" -gt "$CURRENT_MAJOR" ]; then
+               gh pr comment "$PR_NUMBER" --body "Major version update requires manual migration"
+               exit 0  # CRITICAL: exit 0, not exit 1
+             fi
+             ```
+       - [ ] Add `id: auto_downgrade` and `continue-on-error: true` to auto-downgrade step
+       - [ ] Add output variables for tracking auto-downgrade result
+       - [ ] Add PR comment when auto-downgrade fails to find working version
        - [ ] Ensure GITHUB_TOKEN is available in env for `gh pr comment`
        - [ ] Use `continue-on-error: true` for build step
        - [ ] Call auto-downgrade script only for single-package PRs
@@ -2385,6 +2397,130 @@ gh api repos/<owner>/<repo>/automated-security-fixes --method PUT
        - ✅ Daily backups: Run before any updates at 09:00 AM UTC
        - ✅ No "all jobs failed" emails from grouped Dependabot PRs
        - ✅ Only stable versions tested and deployed (no alpha/beta/rc)
+
+50. MAJOR VERSION UPDATE HANDLING (CRITICAL - PREVENTS BREAKING CHANGE AUTO-MERGES):
+    **Problem:** Dependabot creates PRs for major version updates (e.g., tailwindcss 3.x → 4.x) that often have breaking changes requiring manual migration. If the auto-merge workflow doesn't detect these, it attempts auto-downgrade, fails, and triggers "all jobs failed" email alerts.
+    
+    **Solution:** Detect major version updates early and handle them gracefully with informative PR comments.
+    
+    a) **Auto-Merge Workflow Major Version Detection** (MANDATORY):
+       Add this check BEFORE attempting auto-downgrade in .github/workflows/auto-merge-dependabot.yml:
+       ```yaml
+       - name: Handle build failure with auto-downgrade
+         if: steps.build.outcome == 'failure'
+         id: auto_downgrade
+         continue-on-error: true  # CRITICAL: Prevents workflow failure
+         run: |
+           # ... grouped update checks ...
+           
+           # Extract version numbers
+           PACKAGE=$(echo "$PR_TITLE" | grep -oP 'bump \K[^ ]+' || echo "")
+           CURRENT_VERSION=$(echo "$PR_TITLE" | grep -oP 'from \K[0-9.]+' || echo "")
+           NEW_VERSION=$(echo "$PR_TITLE" | grep -oP 'to \K[0-9.]+' || echo "")
+           
+           # Check if this is a major version update
+           CURRENT_MAJOR=$(echo "$CURRENT_VERSION" | cut -d. -f1)
+           NEW_MAJOR=$(echo "$NEW_VERSION" | cut -d. -f1)
+           
+           if [ "$NEW_MAJOR" -gt "$CURRENT_MAJOR" ]; then
+             echo "⚠️ Major version update detected: $CURRENT_VERSION -> $NEW_VERSION"
+             gh pr comment "${{ github.event.pull_request.number }}" --body "⚠️ **Build Failed - Major Version Update Detected**\n\nThis update from **$CURRENT_VERSION** to **$NEW_VERSION** is a major version jump that likely requires manual migration.\n\n**Next Steps:**\n1. Review the package's migration guide\n2. Update code to be compatible with v$NEW_MAJOR\n3. Test thoroughly before merging\n\nAuto-downgrade was not attempted as it would only find older versions."
+             echo "auto_downgrade_result=major_version" >> $GITHUB_OUTPUT
+             exit 0  # CRITICAL: Graceful exit prevents workflow failure email
+           fi
+           
+           # ... proceed with auto-downgrade for minor/patch updates ...
+       ```
+    
+    b) **Handle Failed Auto-Downgrade Gracefully** (MANDATORY):
+       When auto-downgrade can't find a working version, add PR comment and exit gracefully:
+       ```bash
+       if bash scripts/auto-downgrade.sh "$PACKAGE" "$CURRENT_VERSION" "$NEW_VERSION"; then
+         # Success: commit the downgraded version
+         echo "auto_downgrade_result=success" >> $GITHUB_OUTPUT
+       else
+         # Failure: add PR comment and exit gracefully
+         echo "⚠️ Auto-downgrade could not find a working version"
+         gh pr comment "${{ github.event.pull_request.number }}" --body "⚠️ **Auto-Downgrade Failed**\n\nThe auto-downgrade system tested versions between **$CURRENT_VERSION** and **$NEW_VERSION** but could not find a version that builds successfully.\n\n**Recommendation:** Stay with current version **$CURRENT_VERSION** until the issue is resolved.\n\n**Next Steps:**\n1. Review the build failure logs\n2. Check if there are breaking changes or dependency conflicts\n3. Consider updating other dependencies that may be incompatible\n4. Close this PR for now"
+         echo "auto_downgrade_result=no_working_version" >> $GITHUB_OUTPUT
+         exit 0  # CRITICAL: Graceful exit prevents workflow failure email
+       fi
+       ```
+    
+    c) **Update Rebuild and Auto-Merge Conditions**:
+       ```yaml
+       - name: Re-run build after auto-downgrade
+         if: steps.build.outcome == 'failure' && steps.auto_downgrade.outputs.auto_downgrade_result == 'success'
+         id: rebuild
+         env:
+           DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+         run: npm run build
+       
+       - name: Auto-merge PR
+         if: steps.build.outcome == 'success' || steps.rebuild.outcome == 'success'
+         run: gh pr merge --auto --squash "${{ github.event.pull_request.number }}"
+       ```
+    
+    d) **Dependabot Configuration for Breaking Changes** (.github/dependabot.yml):
+       Identify packages with known breaking changes in major versions and configure Dependabot to ignore major updates:
+       ```yaml
+       ignore:
+         - dependency-name: "*"
+           versions: ["*-alpha*", "*-beta*", "*-rc*", "*-canary*", "*-next*"]
+         # Packages with known breaking changes in major versions
+         - dependency-name: "tailwindcss"
+           update-types: ["version-update:semver-major"]
+         - dependency-name: "@types/node"
+           update-types: ["version-update:semver-major"]
+         - dependency-name: "next"
+           update-types: ["version-update:semver-major"]
+         - dependency-name: "react"
+           update-types: ["version-update:semver-major"]
+         - dependency-name: "react-dom"
+           update-types: ["version-update:semver-major"]
+       ```
+    
+    e) **When to Add Major Version Ignore Rules**:
+       Add a package to the ignore list when:
+       - Major version requires architectural changes (e.g., Tailwind CSS v4 requires @tailwindcss/postcss)
+       - Major version has extensive breaking API changes (e.g., React 18 → 19)
+       - Major version requires code migration (e.g., Next.js 14 → 15)
+       - Type definitions change significantly (e.g., @types/node 24 → 25)
+       
+       **Process:**
+       1. When a major version PR fails and can't be auto-downgraded
+       2. Research the package's changelog for breaking changes
+       3. If breaking changes are significant, add to ignore list
+       4. Add comment to PR explaining why and close it
+       5. Major version upgrade can be done manually later with proper testing
+    
+    f) **Benefits of This Approach**:
+       - ✅ No "all jobs failed" emails for major version updates
+       - ✅ Clear PR comments explaining why auto-merge isn't possible
+       - ✅ Major version updates require manual review (as intended)
+       - ✅ Minor and patch updates continue to auto-merge
+       - ✅ Prevents accidental deployment of breaking changes
+       - ✅ Reduces noise in dependency update notifications
+    
+    g) **Implementation Checklist**:
+       - [ ] Add major version detection to auto-merge workflow
+       - [ ] Add `continue-on-error: true` to auto-downgrade step
+       - [ ] Add output variables for auto-downgrade result tracking
+       - [ ] Add PR comment for major version updates
+       - [ ] Add PR comment for failed auto-downgrades
+       - [ ] Update rebuild condition to only run if auto-downgrade succeeded
+       - [ ] Update auto-merge condition to check rebuild outcome
+       - [ ] Configure Dependabot to ignore major updates for packages with breaking changes
+       - [ ] Test with actual major version PR to verify no workflow failure emails
+    
+    h) **Common Packages That Should Ignore Major Updates**:
+       - `tailwindcss` - v4 requires @tailwindcss/postcss plugin
+       - `@types/node` - Major version type changes can break builds
+       - `next` - Major versions often require migration (App Router, etc.)
+       - `react` / `react-dom` - Major versions have breaking changes
+       - `typescript` - Major versions can have breaking type system changes
+       - `eslint` - Major versions change plugin APIs
+       - Any framework or library with known breaking changes between major versions
 
 ===== END RULES =====
 
