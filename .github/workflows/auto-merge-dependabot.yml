@@ -43,22 +43,39 @@ jobs:
       - name: Handle build failure with auto-downgrade
         if: steps.build.outcome == 'failure'
         run: |
-          echo "Build failed, attempting auto-downgrade..."
+          echo "Build failed, checking if auto-downgrade is possible..."
           
           # Extract package name and versions from PR title
           PR_TITLE="${{ github.event.pull_request.title }}"
           echo "PR Title: $PR_TITLE"
           
+          # Check if this is a grouped update (no version numbers in title)
+          if echo "$PR_TITLE" | grep -q "bump the"; then
+            echo "⚠️ This is a grouped dependency update - auto-downgrade not supported"
+            echo "Grouped updates require manual review when builds fail"
+            gh pr comment "${{ github.event.pull_request.number }}" --body "⚠️ **Build Failed - Manual Review Required**\n\nThis grouped dependency update failed to build. Auto-downgrade is not supported for grouped updates.\n\nPlease review the build logs and update dependencies manually."
+            exit 0
+          fi
+          
+          # Check if this is a multi-package update (e.g., "bump react and @types/react")
+          if echo "$PR_TITLE" | grep -q " and "; then
+            echo "⚠️ This is a multi-package update - auto-downgrade not supported"
+            echo "Multi-package updates require manual review when builds fail"
+            gh pr comment "${{ github.event.pull_request.number }}" --body "⚠️ **Build Failed - Manual Review Required**\n\nThis multi-package update failed to build. Auto-downgrade is not supported for multi-package updates.\n\nPlease review the build logs and update packages manually."
+            exit 0
+          fi
+          
+          # Single package update - attempt auto-downgrade
           # Example PR title: "chore(deps): bump next from 14.0.0 to 14.2.0"
-          # Extract: package=next, current=14.0.0, new=14.2.0
           PACKAGE=$(echo "$PR_TITLE" | grep -oP 'bump \K[^ ]+' || echo "")
           CURRENT_VERSION=$(echo "$PR_TITLE" | grep -oP 'from \K[0-9.]+' || echo "")
           NEW_VERSION=$(echo "$PR_TITLE" | grep -oP 'to \K[0-9.]+' || echo "")
           
           if [ -z "$PACKAGE" ] || [ -z "$CURRENT_VERSION" ] || [ -z "$NEW_VERSION" ]; then
-            echo "Could not parse package information from PR title"
+            echo "⚠️ Could not parse package information from PR title"
             echo "Package: $PACKAGE, Current: $CURRENT_VERSION, New: $NEW_VERSION"
-            exit 1
+            gh pr comment "${{ github.event.pull_request.number }}" --body "⚠️ **Build Failed - Manual Review Required**\n\nCould not parse version information from PR title. Please review the build logs and update manually."
+            exit 0
           fi
           
           echo "Running auto-downgrade for $PACKAGE ($CURRENT_VERSION -> $NEW_VERSION)"
@@ -80,6 +97,8 @@ jobs:
               git push
             fi
           fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Re-run build after auto-downgrade
         if: steps.build.outcome == 'failure'
