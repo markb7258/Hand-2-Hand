@@ -478,14 +478,26 @@ EAB HMAC Key: Nrk6tKdDIwM4qM-OSYTbv7kmWCxd7nN4y_x0XURmbFxbE8225TWs8paGqdJkZsF7JG
 - Complete server snapshots backed up daily to GoFile
 - Backups include: Docker volumes, databases, application files, configurations
 - Organized by date: YYYY-MM-DD-server-snapshot.tar.gz
-- Retention: Keep 30 days of backups
+- Retention: Keep 30 days of backups (manual cleanup via GoFile dashboard)
 - Goal: Instant server restoration if anything fails
 
 **GoFile Credentials:**
 Account ID: 0ef9fdb4-f1d0-4b89-b49b-127ca1108460
 Account Token: z9yW4VXg5Hu5qzNk7Rn0ywidKgvmTwsu
 
-**Backup Schedule:** Daily at 3:00 AM UTC (automated via cron)
+**Backup Schedule:** Daily at 9:00 AM UTC (automated via GitHub Actions)
+
+**Implementation:**
+- Workflow: `.github/workflows/daily-backup.yml`
+- Script: `scripts/daily-backup.sh`
+- Trigger: GitHub Actions cron schedule (`0 9 * * *`)
+- Execution: SSH to server, run backup script, upload to GoFile
+- Manual trigger: `gh workflow run daily-backup.yml`
+
+**Why 9:00 AM UTC:**
+- Runs BEFORE Dependabot (10:00 AM) and server updates (11:00 AM Monday)
+- Ensures we have a backup before any automated changes
+- Allows rollback if dependency updates or server maintenance fail
 
 ===== END DAILY SERVER BACKUPS =====
 
@@ -1854,10 +1866,21 @@ docker exec $(docker ps -q -f name=traefik) cat /letsencrypt/acme.json | jq .
 
 **CRITICAL: Only update to stable versions, NEVER beta/alpha/rc/canary/next.**
 
+**Automation Schedule (All Times UTC):**
+- **9:00 AM Daily:** Automated backups to GoFile (before any updates)
+- **10:00 AM Daily:** Dependabot checks for dependency updates
+- **11:00 AM Monday:** Weekly server maintenance (after Dependabot completes)
+
+**Why This Order:**
+1. Backups first ensure we can rollback if updates fail
+2. Dependabot runs next to create/update PRs
+3. Server maintenance runs last, only if all Dependabot PRs are merged
+
 **Automatic Update System (Rule 60 - Replaced with Stable Only Policy):**
     a) ALWAYS configure Dependabot for daily dependency updates at 10:00 AM UTC
     b) ALWAYS implement intelligent auto-downgrade system for failed builds
-    c) ALWAYS configure weekly server updates on Monday at 10:00 AM UTC (after dependencies)
+    c) ALWAYS configure daily backups at 9:00 AM UTC (before Dependabot)
+    d) ALWAYS configure weekly server updates at 11:00 AM UTC Monday (after Dependabot)
 
 **.github/dependabot.yml:**
 ```yaml
@@ -1939,11 +1962,16 @@ jobs:
         with:
           node-version: '20'
       
+      # CRITICAL: Prisma requires DATABASE_URL at build time
       - name: Install dependencies
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
         run: npm ci --legacy-peer-deps
       
       - name: Run build
         id: build
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
         run: npm run build
         continue-on-error: true
       
@@ -1961,6 +1989,13 @@ jobs:
           CURRENT_VERSION=$(npm list $PACKAGE --json | jq -r ".dependencies.$PACKAGE.version")
           bash scripts/auto-downgrade.sh "$PACKAGE" "$CURRENT_VERSION" "$FAILED_VERSION"
 ```
+
+**CRITICAL: DATABASE_URL in GitHub Actions**
+- Prisma requires DATABASE_URL environment variable during `prisma generate` (runs in postinstall)
+- Affects: `npm install`, `npm ci`, `npm run build` in GitHub Actions
+- Solution: Add dummy DATABASE_URL to ALL workflow steps that run npm commands
+- Format: `DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"`
+- This is ONLY needed in CI/CD environments, not in production (uses Docker secrets)
 
 **scripts/server-auto-update.sh:**
 ```bash
@@ -1992,7 +2027,8 @@ name: Weekly Server Maintenance
 
 on:
   schedule:
-    - cron: '0 10 * * 1'  # Monday 10 AM UTC
+    # Monday 11:00 AM UTC (after Dependabot at 10:00 AM)
+    - cron: '0 11 * * 1'
   workflow_dispatch:
 
 jobs:
@@ -2073,6 +2109,33 @@ gh label create "github-actions" --description "Actions updates" --color "2088ff
 gh api repos/<owner>/<repo>/vulnerability-alerts --method PUT
 gh api repos/<owner>/<repo>/automated-security-fixes --method PUT
 ```
+
+44. Prisma DATABASE_URL in GitHub Actions (CRITICAL):
+    a) ALWAYS add DATABASE_URL environment variable to ANY GitHub Actions workflow step that runs:
+       - `npm install`
+       - `npm ci`
+       - `npm run build`
+       - Any command that triggers `prisma generate` (postinstall hook)
+    
+    b) Use dummy connection string in CI/CD environments:
+       ```yaml
+       env:
+         DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+       ```
+    
+    c) This is required because:
+       - Prisma generate runs during `npm install` postinstall hook
+       - Prisma requires DATABASE_URL to be set (even if not connecting)
+       - Without it, builds fail with: "Missing required environment variable: DATABASE_URL"
+    
+    d) Where to add:
+       - Auto-merge Dependabot workflows
+       - Build/test workflows
+       - Any workflow that installs dependencies or builds the app
+    
+    e) Production uses Docker secrets, not environment variables
+       - Server reads from `/run/secrets/db_url`
+       - This dummy URL is ONLY for CI/CD builds
 
 ===== END AUTOMATIC UPDATES =====
 
