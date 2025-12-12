@@ -29,11 +29,15 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
         run: npm install --legacy-peer-deps
 
       - name: Run build test
         id: build
         continue-on-error: true
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
         run: npm run build
 
       - name: Handle build failure with auto-downgrade
@@ -79,6 +83,8 @@ jobs:
 
       - name: Re-run build after auto-downgrade
         if: steps.build.outcome == 'failure'
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
         run: npm run build
 
       - name: Auto-merge PR

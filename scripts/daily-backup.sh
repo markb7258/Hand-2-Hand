@@ -2,7 +2,7 @@
 set -e
 
 # Daily Server Backup Script for GoFile
-# Runs daily at 3:00 AM UTC via cron
+# Runs daily at 9:00 AM UTC via GitHub Actions (before Dependabot at 10:00 AM)
 # Backs up: Docker volumes, app files, SSL certs, configs
 # Retention: 30 days
 

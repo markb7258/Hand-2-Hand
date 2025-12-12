@@ -1,0 +1,57 @@
+name: Daily Server Backup
+
+# This workflow runs daily backups to GoFile
+# Backs up: Docker volumes, app files, SSL certs, configs
+# Runs at 9:00 AM UTC (before Dependabot at 10:00 AM)
+
+on:
+  schedule:
+    # Every day at 9:00 AM UTC
+    - cron: '0 9 * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 196.251.100.142 >> ~/.ssh/known_hosts
+
+      - name: Copy backup script to server
+        run: |
+          scp -i ~/.ssh/id_rsa scripts/daily-backup.sh root@196.251.100.142:/tmp/
+          ssh -i ~/.ssh/id_rsa root@196.251.100.142 'chmod +x /tmp/daily-backup.sh'
+
+      - name: Run backup
+        run: |
+          echo "Starting daily backup at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          ssh -i ~/.ssh/id_rsa root@196.251.100.142 '/tmp/daily-backup.sh'
+          echo "Backup completed at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          ssh -i ~/.ssh/id_rsa root@196.251.100.142 'rm -f /tmp/daily-backup.sh' || true
+          rm -f ~/.ssh/id_rsa
+
+      - name: Notify success
+        if: success()
+        run: |
+          echo "✅ Daily backup completed successfully"
+          echo "Backup uploaded to GoFile"
+
+      - name: Notify failure
+        if: failure()
+        run: |
+          echo "❌ Daily backup failed"
+          echo "Please check the logs and investigate the issue."
