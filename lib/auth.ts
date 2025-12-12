@@ -1,7 +1,8 @@
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
+import { getSecret } from './secrets';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
+const JWT_SECRET = getSecret('JWT_SECRET', '/run/secrets/jwt_secret', 'fallback-secret-key');
 const COOKIE_NAME = 'auth-token';
 
 export interface JWTPayload {

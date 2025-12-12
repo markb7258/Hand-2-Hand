@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  app:
+    image: hand-2-hand:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL_FILE=/run/secrets/db_url
+      - NEXT_PUBLIC_INSTANT_APP_ID=7b67f3b1-46b2-4724-a83d-ae3f6a47b087
+      - NODE_ENV=production
+    secrets:
+      - db_url
+      - instant_secret
+      - jwt_secret
+      - admin_email
+    networks:
+      - appnet
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+    environment:
+      - POSTGRES_USER_FILE=/run/secrets/db_user
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+      - POSTGRES_DB=hand_2_hand_db
+    secrets:
+      - db_user
+      - db_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - appnet
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hand_2_hand_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+secrets:
+  db_url:
+    external: true
+  db_user:
+    external: true
+  db_password:
+    external: true
+  instant_secret:
+    external: true
+  jwt_secret:
+    external: true
+  admin_email:
+    external: true
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  appnet:
+    driver: overlay
+    attachable: true

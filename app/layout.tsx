@@ -30,6 +30,9 @@ export default function RootLayout({
     <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
       <body className="antialiased font-body">
         {children}
+        <footer className="text-center py-4 text-sm text-slate-500 border-t border-slate-200/50">
+          This business was built by VIP Builder AI
+        </footer>
       </body>
     </html>
   );
