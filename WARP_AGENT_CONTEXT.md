@@ -2210,7 +2210,37 @@ gh api repos/<owner>/<repo>/automated-security-fixes --method PUT
 
 ===== END AUTOMATIC UPDATES =====
 
-===== END RULES =====
+47. Auto-downgrade Semantics (CRITICAL - Single-Package PRs):
+    a) Version search window:
+       - Start from FAILED_VERSION (excluded) down to CURRENT_VERSION (excluded)
+       - Test versions in reverse semver order (newest → oldest)
+       - STOP at the first version that builds successfully
+    b) Pre-release filtering (MUST):
+       - Exclude any versions containing: alpha, beta, rc, canary, next
+       - Reason: Stable-only policy; pre-releases are often incompatible
+       - Implementation example:
+         ```bash
+         npm view $PACKAGE versions --json | jq -r '.[]' \n           | grep -v -E '(alpha|beta|rc|canary|next)' \n           | sort -V
+         ```
+    c) State management while testing:
+       - Backup package.json and lockfile before each attempt
+       - On failure: restore backups, `rm -rf node_modules`, then `npm install --legacy-peer-deps`
+       - On success: write the working version to /tmp/working-version.txt and exit 0
+    d) No working version found:
+       - Write CURRENT_VERSION to /tmp/working-version.txt and exit 1
+       - The workflow should then leave the PR open (no merge)
+
+48. Workflow Environment & Secrets Prerequisites (REQUIRED):
+    a) GitHub Actions ENV:
+       - Always set `DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"` for steps that run npm install/build (Prisma)
+       - Ensure `GITHUB_TOKEN` is available for `gh pr comment` and merges
+    b) Repository Secrets:
+       - `COOLIFY_API_TOKEN` – required by deploy.yml to trigger deployments
+       - `SERVER_SSH_KEY` – required by daily-backup.yml to SSH into server
+    c) Schedules (UTC):
+       - 09:00 daily: backups (GitHub Actions)
+       - 10:00 daily: Dependabot
+       - 11:00 Monday: server maintenance (only if no open Dependabot PRs)
 
 ============================================================
 ===== ORIGINAL WEB DEV PROMPT END =====
