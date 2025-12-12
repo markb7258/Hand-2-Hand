@@ -48,3 +48,9 @@ WARP_AGENT_LOG.md
 WARP_AGENT_LOG.md.backup
 
 /lib/generated/prisma
+
+# Prompt development files
+MY OLD PROMPT.txt
+NEW_PROMPT_*.md
+WARP_AGENT_CONTEXT_*.md
+WEB_DEV_PROMPT_*.md

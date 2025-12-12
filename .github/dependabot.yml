@@ -23,6 +23,10 @@ updates:
       - "markb7258"
     assignees:
       - "markb7258"
+    # CRITICAL: Ignore pre-release versions (alpha, beta, rc, canary, next)
+    ignore:
+      - dependency-name: "*"
+        versions: ["*-alpha*", "*-beta*", "*-rc*", "*-canary*", "*-next*"]
     # Group minor and patch updates together for efficiency
     groups:
       production-dependencies:
