@@ -40,9 +40,10 @@ log_info "Package: $PACKAGE_NAME"
 log_info "Current version: $CURRENT_VERSION"
 log_info "Failed version: $FAILED_VERSION"
 
-# Fetch all available versions from npm
-log_info "Fetching available versions from npm..."
-ALL_VERSIONS=$(npm view "$PACKAGE_NAME" versions --json | jq -r '.[]' | sort -V)
+# Fetch all available versions from npm (stable versions only)
+log_info "Fetching available stable versions from npm..."
+ALL_VERSIONS=$(npm view "$PACKAGE_NAME" versions --json | jq -r '.[]' | \
+  grep -v -E '(alpha|beta|rc|canary|next)' | sort -V)
 
 if [ -z "$ALL_VERSIONS" ]; then
     log_error "Could not fetch versions for package $PACKAGE_NAME"
