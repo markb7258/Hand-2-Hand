@@ -27,6 +27,11 @@ updates:
     ignore:
       - dependency-name: "*"
         versions: ["*-alpha*", "*-beta*", "*-rc*", "*-canary*", "*-next*"]
+      # Ignore major version updates for packages with known breaking changes
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     # Group minor and patch updates together for efficiency
     groups:
       production-dependencies:
